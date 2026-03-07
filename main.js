@@ -4,23 +4,27 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 // ═══════════════════════════════════════════════════════════
 // 1.  DỮ LIỆU VÙNG TÀU
+//
+//  type: "exterior" → dùng 3D pin trên bề mặt ngoài
+//        "interior" → dùng sơ đồ mặt cắt 2D
+//
+//  pinCast: hướng bắn tia để tìm bề mặt
+//    { from:"above"|"below"|"side_right"|"side_left"|"front"|"back",
+//      relY, relX, relZ }  (0..1 trong bbox)
 // ═══════════════════════════════════════════════════════════
-//  pinRelY  = chiều cao tương đối (0..1) của điểm đánh dấu trên tàu
-//  pinSide  = "side" | "top" | "front" — hướng đặt pin
-//  pinOffX  = offset X (nếu side)
-//  pinOffZ  = offset Z về phía camera
 const ZONES = {
   day_tau: {
     name: "Đáy Tàu",
-    color: "#3d8fcc",
+    color: "#29b6f6",
     icon: "⚓",
-    pinRelY: 0.04,
-    pinSide: "bottom",
-    viewRelY: 0.08,
-    viewDist: 18,
-    viewAngle: 0.88,
+    type: "exterior",
+    pinCast: { from: "below", relY: 0.02, relXFrac: 0.5, relZFrac: 0.45 },
+    viewRelY: 0.06,
+    viewDist: 22,
+    viewAzimuth: Math.PI * 0.5,
+    viewPolar: 1.35,
     description:
-      "Phần luôn ngập trong nước của tàu, chịu sự tấn công của rất nhiều tác nhân ăn mòn trong những điều kiện khắc nghiệt. Giải pháp bảo vệ khu vực đáy tàu là một hệ thống nhiều lớp sơn bao gồm cả sơn bảo vệ chống lại môi trường ăn mòn và lớp sơn chống lại sự bám bẩu của các sinh vật dưới nước.",
+      "Phần luôn ngập trong nước của tàu, chịu sự tấn công của rất nhiều tác nhân ăn mòn trong những điều kiện khắc nghiệt. Hệ thống sơn bảo vệ bao gồm lớp chống ăn mòn và lớp chống bám bẩu của sinh vật biển.",
     paints: [
       {
         name: "Sơn Epoxy chuyên dụng",
@@ -37,11 +41,12 @@ const ZONES = {
     name: "Mạn Ướt",
     color: "#1565c0",
     icon: "🌊",
-    pinRelY: 0.28,
-    pinSide: "side",
+    type: "exterior",
+    pinCast: { from: "side_right", relY: 0.28, relXFrac: 1.0, relZFrac: 0.4 },
     viewRelY: 0.28,
     viewDist: 22,
-    viewAngle: 1.25,
+    viewAzimuth: Math.PI * 0.22,
+    viewPolar: 1.3,
     description:
       "Phần vỏ tàu thường xuyên ngập trong môi trường nước khi tàu có tải. Các vị trí này cần được bảo vệ bởi hệ thống các lớp sơn chuyên dụng chống ăn mòn chất lượng cao.",
     paints: [
@@ -59,13 +64,14 @@ const ZONES = {
     name: "Mạn Khô",
     color: "#c62828",
     icon: "☀️",
-    pinRelY: 0.47,
-    pinSide: "side",
-    viewRelY: 0.47,
+    type: "exterior",
+    pinCast: { from: "side_right", relY: 0.5, relXFrac: 1.0, relZFrac: 0.38 },
+    viewRelY: 0.48,
     viewDist: 22,
-    viewAngle: 1.35,
+    viewAzimuth: Math.PI * 0.22,
+    viewPolar: 1.35,
     description:
-      "Vị trí thuộc vỏ tàu ít tiếp xúc với nước, tiếp xúc thường xuyên hơn với ánh nắng. Việc lựa chọn hệ sơn cần chú ý đến khả năng giữ màu của lớp phủ nhưng vẫn tuân thủ nghiêm ngặt các tính năng chống ăn mòn.",
+      "Vị trí thuộc vỏ tàu ít tiếp xúc với nước, tiếp xúc thường xuyên hơn với ánh nắng. Lựa chọn hệ sơn cần giữ màu tốt và chống ăn mòn hiệu quả.",
     paints: [
       {
         name: "Sơn Epoxy chuyên dụng",
@@ -81,13 +87,14 @@ const ZONES = {
     name: "Mặt Boong, Lối Đi",
     color: "#2e7d32",
     icon: "🚶",
-    pinRelY: 0.6,
-    pinSide: "top",
-    viewRelY: 0.62,
+    type: "exterior",
+    pinCast: { from: "above", relY: 0.62, relXFrac: 0.5, relZFrac: 0.3 },
+    viewRelY: 0.6,
     viewDist: 28,
-    viewAngle: 0.55,
+    viewAzimuth: Math.PI * 0.25,
+    viewPolar: 0.52,
     description:
-      "Các vị trí đi lại, di chuyển, không ngập nước, tiếp xúc thường xuyên với ánh nắng, mưa bão. Sơn cần có độ bám tốt, chống trơn trượt và chịu được tải trọng cơ học.",
+      "Các vị trí đi lại, di chuyển, không ngập nước, tiếp xúc thường xuyên với ánh nắng, mưa bão. Sơn cần độ bám tốt, chống trơn trượt và chịu tải trọng cơ học.",
     paints: [
       {
         name: "Sơn Epoxy",
@@ -107,13 +114,16 @@ const ZONES = {
     name: "Hầm Hàng",
     color: "#7b1fa2",
     icon: "📦",
-    pinRelY: 0.68,
-    pinSide: "top",
-    viewRelY: 0.65,
-    viewDist: 30,
-    viewAngle: 0.5,
+    type: "interior",
+    // interior → hiển thị sơ đồ mặt cắt, không dùng 3D pin
+    // Vùng highlight trong sơ đồ SVG (tỉ lệ 0..1 trong hình)
+    diagramZone: { x: 0.12, y: 0.25, w: 0.76, h: 0.52 },
+    viewRelY: 0.6,
+    viewDist: 32,
+    viewAzimuth: Math.PI * 0.25,
+    viewPolar: 0.45,
     description:
-      "Khu vực chứa hàng của tàu. Các giải pháp chống ăn mòn dựa trên điều kiện và tính chất của hàng hóa mà tàu vận chuyển. Cần lựa chọn hệ sơn phù hợp với loại hàng hóa cụ thể.",
+      "Khu vực chứa hàng bên trong thân tàu. Các giải pháp chống ăn mòn dựa trên điều kiện và tính chất của hàng hóa mà tàu vận chuyển. Cần lựa chọn hệ sơn phù hợp với loại hàng hóa cụ thể.",
     paints: [
       {
         name: "Sơn Epoxy chuyên dụng",
@@ -134,13 +144,14 @@ const ZONES = {
     name: "Hệ Thống Khung Xương",
     color: "#e65100",
     icon: "🔩",
-    pinRelY: 0.38,
-    pinSide: "side",
-    viewRelY: 0.38,
-    viewDist: 20,
-    viewAngle: 1.15,
+    type: "interior",
+    diagramZone: { x: 0.04, y: 0.08, w: 0.92, h: 0.88 },
+    viewRelY: 0.4,
+    viewDist: 28,
+    viewAzimuth: Math.PI * 0.22,
+    viewPolar: 1.1,
     description:
-      "Khu vực chịu lực cho tàu, phân bố đều trong thân tàu, không tiếp xúc trực tiếp với nước nhưng dễ phát sinh hơi ẩm. Đây là bộ phận cấu trúc quan trọng nhất của con tàu.",
+      "Khu vực chịu lực cho tàu, phân bố đều trong thân tàu theo chiều ngang và dọc. Không tiếp xúc trực tiếp với nước nhưng dễ phát sinh hơi ẩm do ngưng tụ.",
     paints: [
       {
         name: "Sơn Epoxy chuyên dụng",
@@ -155,15 +166,16 @@ const ZONES = {
   },
   thuong_tang: {
     name: "Thượng Tầng / Cabin",
-    color: "#546e7a",
+    color: "#78909c",
     icon: "🏠",
-    pinRelY: 0.85,
-    pinSide: "top",
-    viewRelY: 0.86,
-    viewDist: 20,
-    viewAngle: 1.05,
+    type: "exterior",
+    pinCast: { from: "front", relY: 0.82, relXFrac: 0.5, relZFrac: 0.0 },
+    viewRelY: 0.82,
+    viewDist: 18,
+    viewAzimuth: Math.PI * -0.15,
+    viewPolar: 1.1,
     description:
-      "Khu vực thượng tầng tàu, bao gồm cabin và các công trình trên boong, tiếp xúc nhiều với thời tiết, ánh nắng và mưa bão. Yêu cầu thẩm mỹ cao bên cạnh khả năng bảo vệ.",
+      "Khu vực thượng tầng tàu, bao gồm cabin và các công trình trên boong. Tiếp xúc nhiều với thời tiết, ánh nắng và mưa bão. Yêu cầu thẩm mỹ cao bên cạnh khả năng bảo vệ.",
     paints: [
       {
         name: "Sơn Epoxy chuyên dụng",
@@ -180,6 +192,7 @@ const ZONES = {
     ],
   },
 };
+
 const LEGEND_ORDER = [
   "day_tau",
   "man_uot",
@@ -205,11 +218,12 @@ const NAME_RULES = [
       "rudder",
       "propeller",
       "skeg",
+      "draught",
     ],
     "day_tau",
   ],
   [
-    ["wet", "waterline", "man_uot", "boot_top", "antifoul", "blister"],
+    ["wet", "waterline", "man_uot", "boot_top", "antifoul", "blister", "boot"],
     "man_uot",
   ],
   [
@@ -221,6 +235,7 @@ const NAME_RULES = [
       "sheer",
       "hull_side",
       "belt",
+      "topsides",
     ],
     "man_kho",
   ],
@@ -235,9 +250,8 @@ const NAME_RULES = [
       "grating",
       "platform",
       "walkplate",
-      "passag",
-      "corridor",
       "gangway",
+      "corridor",
     ],
     "mat_boong",
   ],
@@ -254,8 +268,8 @@ const NAME_RULES = [
       "bay",
       "slot",
       "cell",
-      "stack",
       "stow",
+      "hatch_cover",
     ],
     "ham_hang",
   ],
@@ -272,8 +286,6 @@ const NAME_RULES = [
       "floor_plate",
       "longit",
       "transv",
-      "khung",
-      "suon",
       "truss",
       "structural",
       "intercostal",
@@ -307,13 +319,14 @@ const NAME_RULES = [
       "forecastle",
       "poop",
       "windlass",
-      "capstan",
       "winch",
       "bollard",
+      "accommodation",
     ],
     "thuong_tang",
   ],
 ];
+
 function zoneByName(n) {
   if (!n) return null;
   const l = n.toLowerCase();
@@ -321,30 +334,33 @@ function zoneByName(n) {
     if (kws.some((w) => l.includes(w))) return ZONES[k];
   return null;
 }
+
 const _nm = new THREE.Matrix3(),
   _wn = new THREE.Vector3();
 function zoneByPhysics(wn, relY, relX) {
   const ny = wn.y,
     nx = Math.abs(wn.x),
     nz = Math.abs(wn.z);
-  if (ny > 0.55) {
+  if (ny > 0.6) {
     if (relY < 0.1) return ZONES.day_tau;
-    if (relY > 0.55 && relX < 0.65) return ZONES.ham_hang;
+    if (relY > 0.56 && relX < 0.62) return ZONES.ham_hang;
     return ZONES.mat_boong;
   }
-  if (ny < -0.5) {
+  if (ny < -0.55) {
     if (relY < 0.12) return ZONES.day_tau;
     return ZONES.he_thong_khung;
   }
-  if (relY > 0.55 && relX < 0.7 && (nx > 0.3 || nz > 0.3))
+  // Vertical surfaces
+  if (relY > 0.56 && relX < 0.68 && (nx > 0.28 || nz > 0.28))
     return ZONES.ham_hang;
-  if (relY > 0.72) return ZONES.thuong_tang;
-  if (relY < 0.15) return ZONES.day_tau;
-  if (relY < 0.33) return ZONES.man_uot;
+  if (relY > 0.74) return ZONES.thuong_tang;
+  if (relY < 0.14) return ZONES.day_tau;
+  if (relY < 0.32) return ZONES.man_uot;
   if (relY < 0.56) return ZONES.man_kho;
-  if (relY < 0.72) return ZONES.mat_boong;
+  if (relY < 0.74) return ZONES.mat_boong;
   return ZONES.thuong_tang;
 }
+
 function detectZone(mesh, point, face, bbox) {
   const n = zoneByName(mesh.name);
   if (n) return n;
@@ -378,6 +394,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.1;
 document.body.appendChild(renderer.domElement);
+
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.07;
@@ -407,169 +424,175 @@ scene.add(fill);
 scene.add(new THREE.HemisphereLight(0x99ccff, 0x334455, 0.4));
 
 // ═══════════════════════════════════════════════════════════
-// 5.  PIN MARKER — mũi tên 3D + vòng xung động
+// 5.  PIN 3D — CHỈ DÙNG CHO VÙNG NGOÀI
 // ═══════════════════════════════════════════════════════════
-let pinGroup = null; // nhóm marker hiện tại
-let pinAnimT = 0; // thời gian animate
+let pinGroup = null,
+  pinAnimT = 0;
+const _castRC = new THREE.Raycaster();
 
 function buildPin(color) {
   const grp = new THREE.Group();
   const col = new THREE.Color(color);
-
-  // --- Trụ đứng (thân kim) ---
-  const stemGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.4, 8);
-  const stemMat = new THREE.MeshStandardMaterial({
-    color: col,
-    emissive: col,
-    emissiveIntensity: 0.6,
-    roughness: 0.3,
-  });
-  const stem = new THREE.Mesh(stemGeo, stemMat);
-  stem.position.y = 0.7;
+  const stem = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.035, 0.035, 1.2, 8),
+    new THREE.MeshStandardMaterial({
+      color: col,
+      emissive: col,
+      emissiveIntensity: 0.7,
+      roughness: 0.2,
+    }),
+  );
+  stem.position.y = 0.6;
   grp.add(stem);
-
-  // --- Đầu mũi tên (cone chỉ xuống) ---
-  const coneGeo = new THREE.ConeGeometry(0.22, 0.45, 12);
-  const coneMat = new THREE.MeshStandardMaterial({
-    color: col,
-    emissive: col,
-    emissiveIntensity: 0.7,
-    roughness: 0.2,
-  });
-  const cone = new THREE.Mesh(coneGeo, coneMat);
-  cone.rotation.z = Math.PI; // úp ngược xuống
-  cone.position.y = -0.05;
+  const cone = new THREE.Mesh(
+    new THREE.ConeGeometry(0.2, 0.4, 12),
+    new THREE.MeshStandardMaterial({
+      color: col,
+      emissive: col,
+      emissiveIntensity: 0.8,
+      roughness: 0.15,
+    }),
+  );
+  cone.rotation.z = Math.PI;
+  cone.position.y = -0.04;
   grp.add(cone);
-
-  // --- Quả cầu trên đỉnh ---
-  const ballGeo = new THREE.SphereGeometry(0.18, 14, 14);
-  const ballMat = new THREE.MeshStandardMaterial({
-    color: col,
-    emissive: col,
-    emissiveIntensity: 0.8,
-    roughness: 0.15,
-    metalness: 0.3,
-  });
-  const ball = new THREE.Mesh(ballGeo, ballMat);
-  ball.position.y = 1.42;
+  const ball = new THREE.Mesh(
+    new THREE.SphereGeometry(0.16, 14, 14),
+    new THREE.MeshStandardMaterial({
+      color: col,
+      emissive: col,
+      emissiveIntensity: 0.9,
+      roughness: 0.1,
+      metalness: 0.3,
+    }),
+  );
+  ball.position.y = 1.24;
   grp.add(ball);
-
-  // --- Vòng xung 1 (pulse ring) ---
-  const ring1Geo = new THREE.RingGeometry(0.3, 0.45, 32);
-  const ring1Mat = new THREE.MeshBasicMaterial({
-    color: col,
-    transparent: true,
-    opacity: 0.7,
-    side: THREE.DoubleSide,
-  });
-  const ring1 = new THREE.Mesh(ring1Geo, ring1Mat);
-  ring1.rotation.x = -Math.PI / 2;
-  ring1.position.y = 0.01;
-  ring1.userData.isPulse = true;
-  ring1.userData.phase = 0;
-  grp.add(ring1);
-
-  // --- Vòng xung 2 (lệch pha) ---
-  const ring2Geo = new THREE.RingGeometry(0.3, 0.45, 32);
-  const ring2Mat = new THREE.MeshBasicMaterial({
-    color: col,
-    transparent: true,
-    opacity: 0.5,
-    side: THREE.DoubleSide,
-  });
-  const ring2 = new THREE.Mesh(ring2Geo, ring2Mat);
-  ring2.rotation.x = -Math.PI / 2;
-  ring2.position.y = 0.01;
-  ring2.userData.isPulse = true;
-  ring2.userData.phase = Math.PI; // lệch 180°
-  grp.add(ring2);
-
-  // --- Vòng sáng đáy cố định ---
-  const baseGeo = new THREE.RingGeometry(0.18, 0.3, 32);
-  const baseMat = new THREE.MeshBasicMaterial({
-    color: col,
-    transparent: true,
-    opacity: 0.5,
-    side: THREE.DoubleSide,
-  });
-  const base = new THREE.Mesh(baseGeo, baseMat);
+  // Pulse rings
+  for (let i = 0; i < 2; i++) {
+    const r = new THREE.Mesh(
+      new THREE.RingGeometry(0.25, 0.38, 32),
+      new THREE.MeshBasicMaterial({
+        color: col,
+        transparent: true,
+        opacity: 0.7,
+        side: THREE.DoubleSide,
+      }),
+    );
+    r.rotation.x = -Math.PI / 2;
+    r.position.y = 0.01;
+    r.userData.isPulse = true;
+    r.userData.phase = i * Math.PI;
+    grp.add(r);
+  }
+  const base = new THREE.Mesh(
+    new THREE.RingGeometry(0.15, 0.26, 32),
+    new THREE.MeshBasicMaterial({
+      color: col,
+      transparent: true,
+      opacity: 0.5,
+      side: THREE.DoubleSide,
+    }),
+  );
   base.rotation.x = -Math.PI / 2;
   base.position.y = 0.01;
   grp.add(base);
-
   return grp;
 }
 
-// Tính vị trí điểm đặt pin dựa trên zone + bbox + raycasting nhanh
-function computePinPosition(zoneKey, bbox) {
-  const z = ZONES[zoneKey];
+/**
+ * Tìm điểm bề mặt chính xác bằng cách bắn tia từ ngoài vào
+ * from: "above"|"below"|"side_right"|"side_left"|"front"|"back"
+ */
+function castToSurface(cfg, bbox, meshList) {
   const sz = bbox.getSize(new THREE.Vector3());
-  const cen = bbox.getCenter(new THREE.Vector3());
-  const y = bbox.min.y + sz.y * z.pinRelY;
+  const min = bbox.min,
+    max = bbox.max;
+  const cx = (min.x + max.x) * 0.5,
+    cy = (min.y + max.y) * 0.5,
+    cz = (min.z + max.z) * 0.5;
 
-  // Offset về phía trước (về phía camera Z dương) 40% bán kính tàu
-  const halfZ = sz.z * 0.4;
-
-  switch (z.pinSide) {
-    case "side":
-      // Đặt ở mạn phải tàu (X+) để camera nhìn thấy
-      return new THREE.Vector3(bbox.max.x * 0.92, y, cen.z + halfZ * 0.3);
-    case "top":
-      return new THREE.Vector3(cen.x, y + 0.15, cen.z + halfZ * 0.5);
-    case "bottom":
-      return new THREE.Vector3(cen.x * 0.6, y, cen.z + halfZ * 0.4);
-    default:
-      return new THREE.Vector3(cen.x, y, cen.z);
-  }
-}
-
-// Dùng raycaster từ dưới lên / từ bên để snap pin vào bề mặt tàu
-function snapPinToSurface(pos, zoneKey, meshList) {
-  if (!meshList.length) return pos;
-  const z = ZONES[zoneKey];
+  const tx = min.x + sz.x * cfg.relXFrac;
+  const ty = min.y + sz.y * cfg.relY;
+  const tz = min.z + sz.z * cfg.relZFrac;
 
   let origin, dir;
-  if (z.pinSide === "top" || z.pinSide === "bottom") {
-    origin = new THREE.Vector3(pos.x, pos.y + 3, pos.z);
-    dir = new THREE.Vector3(0, -1, 0);
-  } else {
-    // Từ ngoài vào mạn tàu
-    origin = new THREE.Vector3(pos.x + 5, pos.y, pos.z);
-    dir = new THREE.Vector3(-1, 0, 0);
+  const MARGIN = 4;
+  switch (cfg.from) {
+    case "above":
+      origin = new THREE.Vector3(tx, max.y + MARGIN, tz);
+      dir = new THREE.Vector3(0, -1, 0);
+      break;
+    case "below":
+      origin = new THREE.Vector3(tx, min.y - MARGIN, tz);
+      dir = new THREE.Vector3(0, 1, 0);
+      break;
+    case "side_right":
+      origin = new THREE.Vector3(max.x + MARGIN, ty, tz);
+      dir = new THREE.Vector3(-1, 0, 0);
+      break;
+    case "side_left":
+      origin = new THREE.Vector3(min.x - MARGIN, ty, tz);
+      dir = new THREE.Vector3(1, 0, 0);
+      break;
+    case "front":
+      origin = new THREE.Vector3(tx, ty, min.z - MARGIN);
+      dir = new THREE.Vector3(0, 0, 1);
+      break;
+    case "back":
+      origin = new THREE.Vector3(tx, ty, max.z + MARGIN);
+      dir = new THREE.Vector3(0, 0, -1);
+      break;
+    default:
+      origin = new THREE.Vector3(cx, max.y + MARGIN, cz);
+      dir = new THREE.Vector3(0, -1, 0);
   }
 
-  const rc = new THREE.Raycaster(origin, dir.normalize(), 0.01, 12);
-  const hits = rc.intersectObjects(meshList, false);
+  _castRC.set(origin, dir.normalize());
+  _castRC.far = sz.y * 3 + MARGIN * 2;
+  const hits = _castRC.intersectObjects(meshList, false);
+
   if (hits.length) {
-    return hits[0].point.clone();
+    // Tìm hit gần target nhất về Y
+    let best = hits[0];
+    for (const h of hits) {
+      if (Math.abs(h.point.y - ty) < Math.abs(best.point.y - ty)) best = h;
+    }
+    return {
+      point: best.point.clone(),
+      normal: best.face
+        ? best.face.normal
+            .clone()
+            .applyMatrix3(_nm.getNormalMatrix(best.object.matrixWorld))
+            .normalize()
+        : dir.clone().negate(),
+    };
   }
-  return pos;
+  // Fallback: vị trí ước lượng
+  return { point: new THREE.Vector3(tx, ty, tz), normal: dir.clone().negate() };
 }
 
-function placePin(zoneKey, meshList) {
-  // Xoá pin cũ
+function placePin(key, meshList) {
   if (pinGroup) {
     scene.remove(pinGroup);
     pinGroup = null;
   }
-  if (!shipBBox) return;
+  const z = ZONES[key];
+  if (z.type !== "exterior" || !shipBBox || !z.pinCast) return;
 
-  const z = ZONES[zoneKey];
-  const approxPos = computePinPosition(zoneKey, shipBBox);
-  const surfacePos = snapPinToSurface(approxPos, zoneKey, meshList);
-
+  const result = castToSurface(z.pinCast, shipBBox, meshList);
   pinGroup = buildPin(z.color);
+  pinGroup.position.copy(result.point);
 
-  // Đặt pin: đầu mũi tên chỉ vào bề mặt
-  pinGroup.position.copy(surfacePos);
-
-  // Với mạn tàu (side), xoay pin nằm ngang chỉ vào mạn
-  if (z.pinSide === "side") {
-    pinGroup.rotation.z = -Math.PI / 2; // pin nằm ngang, mũi chỉ vào mạn
+  // Căn pin theo normal bề mặt
+  const up = new THREE.Vector3(0, 1, 0);
+  const dot = result.normal.dot(up);
+  if (Math.abs(dot) < 0.95) {
+    const q = new THREE.Quaternion().setFromUnitVectors(up, result.normal);
+    pinGroup.quaternion.copy(q);
   }
-
-  scene.add(pinGroup);
   pinAnimT = 0;
+  scene.add(pinGroup);
 }
 
 function removePin() {
@@ -580,7 +603,189 @@ function removePin() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 6.  HOVER TOOLTIP
+// 6.  SƠ ĐỒ MẶT CẮT 2D — CHO VÙNG BÊN TRONG
+//     Vẽ bằng SVG hiển thị trực tiếp bên cạnh info panel
+// ═══════════════════════════════════════════════════════════
+function buildCrossSectionSVG(highlightKey) {
+  const z = ZONES[highlightKey];
+  const W = 460,
+    H = 220;
+
+  // ── Định nghĩa hình dạng từng vùng trong sơ đồ ──────────
+  // Toạ độ SVG (x, y từ top-left)
+  const hullColor = "#334455";
+  const waterColor = "rgba(21,101,192,0.35)";
+
+  // Vùng tô highlight
+  const dz = z.diagramZone;
+  const hx = dz.x * W,
+    hy = dz.y * H,
+    hw = dz.w * W,
+    hh = dz.h * H;
+
+  const zones2d = [
+    // key, x, y, w, h, label, labelX, labelY
+    [
+      "day_tau",
+      0.03 * W,
+      0.78 * H,
+      0.94 * W,
+      0.18 * H,
+      "Đáy Tàu",
+      0.5 * W,
+      0.885 * H,
+    ],
+    [
+      "man_uot",
+      0.01 * W,
+      0.55 * H,
+      0.05 * W,
+      0.23 * H,
+      "Mạn Ướt",
+      -12,
+      0.67 * H,
+    ],
+    ["man_uot_r", 0.94 * W, 0.55 * H, 0.05 * W, 0.23 * H, null, null, null],
+    [
+      "man_kho",
+      0.01 * W,
+      0.32 * H,
+      0.05 * W,
+      0.23 * H,
+      "Mạn Khô",
+      -12,
+      0.44 * H,
+    ],
+    ["man_kho_r", 0.94 * W, 0.32 * H, 0.05 * W, 0.23 * H, null, null, null],
+    [
+      "ham_hang",
+      0.1 * W,
+      0.22 * H,
+      0.8 * W,
+      0.55 * H,
+      "Hầm Hàng",
+      0.5 * W,
+      0.49 * H,
+    ],
+    [
+      "he_thong_khung",
+      0.06 * W,
+      0.18 * H,
+      0.88 * W,
+      0.62 * H,
+      "Khung Xương",
+      0.5 * W,
+      0.5 * H,
+    ],
+    [
+      "mat_boong",
+      0.06 * W,
+      0.18 * H,
+      0.88 * W,
+      0.06 * H,
+      "Mặt Boong",
+      0.5 * W,
+      0.215 * H,
+    ],
+    [
+      "thuong_tang",
+      0.28 * W,
+      0.02 * H,
+      0.44 * W,
+      0.17 * H,
+      "Thượng Tầng",
+      0.5 * W,
+      0.09 * H,
+    ],
+  ];
+
+  // Chỉ lấy zones cần vẽ (không phải _r variants)
+  const drawZones = zones2d.filter((z) => !z[0].endsWith("_r"));
+  // Các zones của cùng nhóm (left+right mạn)
+  const allRects = zones2d;
+
+  // Màu fill cho từng zone (mờ)
+  function getFill(k) {
+    if (k === highlightKey) return z.color + "cc";
+    const zz = ZONES[k];
+    return zz ? zz.color + "33" : "#ffffff11";
+  }
+  function getStroke(k) {
+    if (k === highlightKey) return z.color;
+    const zz = ZONES[k];
+    return zz ? zz.color + "88" : "#ffffff44";
+  }
+
+  // Vẽ SVG
+  let rects = "";
+  for (const [k, x, y, w, h] of allRects) {
+    const baseKey = k.replace("_r", "");
+    rects += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}"
+      width="${w.toFixed(1)}" height="${h.toFixed(1)}"
+      fill="${getFill(baseKey)}" stroke="${getStroke(baseKey)}"
+      stroke-width="${k === highlightKey ? 2 : 1}" rx="3"/>`;
+  }
+
+  // Mũi tàu (phải)
+  rects += `<polygon points="${(0.97 * W).toFixed(1)},${(0.22 * H).toFixed(1)}
+    ${(1.0 * W).toFixed(1)},${(0.55 * H).toFixed(1)}
+    ${(0.97 * W).toFixed(1)},${(0.96 * H).toFixed(1)}"
+    fill="${hullColor}" stroke="#4488aa88" stroke-width="1"/>`;
+  // Đuôi tàu (trái)
+  rects += `<polygon points="${(0.03 * W).toFixed(1)},${(0.22 * H).toFixed(1)}
+    ${(0.0 * W).toFixed(1)},${(0.55 * H).toFixed(1)}
+    ${(0.03 * W).toFixed(1)},${(0.96 * H).toFixed(1)}"
+    fill="${hullColor}" stroke="#4488aa88" stroke-width="1"/>`;
+
+  // Đường mực nước
+  const wLine = (0.63 * H).toFixed(1);
+  rects += `<line x1="0" y1="${wLine}" x2="${W}" y2="${wLine}"
+    stroke="#1565c0" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.8"/>
+  <text x="${(W - 4).toFixed(0)}" y="${(parseFloat(wLine) - 4).toFixed(0)}"
+    font-size="9" fill="#64b5f6" text-anchor="end" font-family="sans-serif">
+    Mực nước
+  </text>`;
+
+  // Labels
+  let labels = "";
+  for (const [k, x, y, w, h, lbl, lx, ly] of drawZones) {
+    if (!lbl || lx === null) continue;
+    const isHL = k === highlightKey;
+    labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}"
+      font-size="${isHL ? 12 : 9}" font-weight="${isHL ? "700" : "400"}"
+      fill="${isHL ? "#fff" : ZONES[k]?.color + "bb" || "#888"}"
+      text-anchor="middle" font-family="sans-serif"
+      dominant-baseline="middle">${lbl}</text>`;
+  }
+
+  // Mũi tên chỉ vào vùng highlight
+  const arrowX = (hx + hw * 0.5).toFixed(1);
+  const arrowY = (hy - 18).toFixed(1);
+  const arrowTip = (hy - 2).toFixed(1);
+  const arrowLabel = `
+    <line x1="${arrowX}" y1="${arrowY}" x2="${arrowX}" y2="${arrowTip}"
+      stroke="${z.color}" stroke-width="2" marker-end="url(#arr)"/>
+    <text x="${arrowX}" y="${(parseFloat(arrowY) - 8).toFixed(1)}"
+      font-size="11" font-weight="700" fill="${z.color}"
+      text-anchor="middle" font-family="sans-serif">
+      ${z.icon} ${z.name}
+    </text>`;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg"
+    width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
+    style="border-radius:8px;background:#0a1520;display:block;max-width:100%">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8"
+        refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="${z.color}"/>
+      </marker>
+    </defs>
+    ${rects}${labels}${arrowLabel}
+  </svg>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// 7.  HOVER TOOLTIP
 // ═══════════════════════════════════════════════════════════
 const hoverTip = document.getElementById("tooltip");
 Object.assign(hoverTip.style, {
@@ -602,24 +807,24 @@ Object.assign(hoverTip.style, {
 });
 
 // ═══════════════════════════════════════════════════════════
-// 7.  INFO PANEL
+// 8.  INFO PANEL
 // ═══════════════════════════════════════════════════════════
 const infoPanel = document.createElement("div");
 Object.assign(infoPanel.style, {
   position: "fixed",
   top: "16px",
   right: "16px",
-  width: "320px",
+  width: "340px",
   maxHeight: "calc(100vh - 32px)",
   overflowY: "auto",
-  background: "rgba(5,12,26,0.96)",
+  background: "rgba(5,12,26,0.97)",
   backdropFilter: "blur(16px)",
   border: "1px solid rgba(100,170,255,0.22)",
   borderRadius: "14px",
   boxShadow: "0 12px 40px rgba(0,0,0,0.7)",
   zIndex: "999",
-  transform: "translateX(360px)",
-  transition: "transform .35s cubic-bezier(.4,0,.2,1)",
+  transform: "translateX(380px)",
+  transition: "transform .38s cubic-bezier(.4,0,.2,1)",
   color: "#f0f4ff",
   fontSize: "13px",
   lineHeight: "1.65",
@@ -636,24 +841,46 @@ function openInfoPanel(key) {
     legendRows[k].style.borderLeft =
       k === key ? `3px solid ${ZONES[k].color}` : "3px solid transparent";
   });
+
+  // Sơ đồ mặt cắt cho vùng interior
+  const diagramHTML =
+    z.type === "interior"
+      ? `
+    <div style="padding:14px 20px 4px;border-bottom:1px solid rgba(100,170,255,.12)">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.7px;
+        color:#7ec8e3;margin-bottom:10px">📐 SƠ ĐỒ MẶT CẮT NGANG TÀU</div>
+      <div style="overflow-x:auto">
+        ${buildCrossSectionSVG(key)}
+      </div>
+      <div style="font-size:10px;color:#556677;margin-top:6px;text-align:center">
+        ↑ Vùng được đánh dấu trong sơ đồ mặt cắt
+      </div>
+    </div>`
+      : "";
+
   infoPanel.innerHTML = `
-    <div style="background:linear-gradient(135deg,${z.color}55,${z.color}22);
+    <div style="background:linear-gradient(135deg,${z.color}55,${z.color}18);
       padding:18px 20px 14px;border-radius:14px 14px 0 0;
-      border-bottom:1px solid rgba(100,170,255,.15);position:relative">
+      border-bottom:1px solid rgba(100,170,255,.12);position:relative">
       <button id="closePanel" style="position:absolute;top:12px;right:14px;
-        background:rgba(255,255,255,.1);border:none;color:#aac;
+        background:rgba(255,255,255,.1);border:none;color:#99aacc;
         width:26px;height:26px;border-radius:50%;cursor:pointer;
-        font-size:14px;line-height:26px;text-align:center">✕</button>
+        font-size:14px;line-height:26px;text-align:center;transition:background .15s"
+        onmouseover="this.style.background='rgba(255,255,255,.2)'"
+        onmouseout="this.style.background='rgba(255,255,255,.1)'">✕</button>
       <div style="font-size:28px;margin-bottom:6px">${z.icon}</div>
-      <div style="font-size:17px;font-weight:700;color:#fff">${z.name}</div>
-      <div style="margin-top:4px">
-        <span style="display:inline-block;width:8px;height:8px;
-          background:${z.color};border-radius:50%;margin-right:6px"></span>
-        <span style="font-size:11px;color:#aac;letter-spacing:.5px">MÔ TẢ KHU VỰC</span>
+      <div style="font-size:18px;font-weight:700;color:#fff">${z.name}</div>
+      <div style="margin-top:5px;display:flex;align-items:center;gap:6px">
+        <span style="width:8px;height:8px;background:${z.color};
+          border-radius:50%;display:inline-block"></span>
+        <span style="font-size:11px;color:#8899bb;letter-spacing:.5px">
+          ${z.type === "interior" ? "KHU VỰC BÊN TRONG" : "KHU VỰC BỀ MẶT NGOÀI"}
+        </span>
       </div>
     </div>
-    <div style="padding:16px 20px 14px;color:#b8cee6;font-size:12.5px;
-      line-height:1.75;border-bottom:1px solid rgba(100,170,255,.12)">
+    ${diagramHTML}
+    <div style="padding:14px 20px;color:#b0c8e0;font-size:12.5px;
+      line-height:1.78;border-bottom:1px solid rgba(100,170,255,.10)">
       ${z.description}
     </div>
     <div style="padding:14px 20px 18px">
@@ -662,12 +889,12 @@ function openInfoPanel(key) {
       ${z.paints
         .map(
           (p, i) => `
-        <div style="display:flex;gap:12px;margin-bottom:10px;
+        <div style="display:flex;gap:11px;margin-bottom:9px;
           background:rgba(255,255,255,.04);padding:10px 12px;
           border-radius:8px;border-left:3px solid ${z.color}">
-          <div style="flex-shrink:0;width:24px;height:24px;background:${z.color};
+          <div style="flex-shrink:0;width:22px;height:22px;background:${z.color};
             border-radius:50%;display:flex;align-items:center;justify-content:center;
-            font-size:11px;font-weight:700;color:#fff;margin-top:1px">${i + 1}</div>
+            font-size:11px;font-weight:700;color:#fff;margin-top:2px">${i + 1}</div>
           <div>
             <div style="font-weight:700;color:#f0e080;font-size:13px;
               margin-bottom:3px">${p.name}</div>
@@ -677,6 +904,7 @@ function openInfoPanel(key) {
         )
         .join("")}
     </div>`;
+
   document
     .getElementById("closePanel")
     .addEventListener("click", closeInfoPanel);
@@ -684,7 +912,7 @@ function openInfoPanel(key) {
 }
 
 function closeInfoPanel() {
-  infoPanel.style.transform = "translateX(360px)";
+  infoPanel.style.transform = "translateX(380px)";
   activeZoneKey = null;
   removePin();
   LEGEND_ORDER.forEach((k) => {
@@ -694,7 +922,7 @@ function closeInfoPanel() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 8.  LEGEND
+// 9.  LEGEND
 // ═══════════════════════════════════════════════════════════
 const legend = document.createElement("div");
 Object.assign(legend.style, {
@@ -711,10 +939,11 @@ Object.assign(legend.style, {
   border: "1px solid rgba(100,170,255,.2)",
   zIndex: "999",
   userSelect: "none",
-  minWidth: "200px",
+  minWidth: "205px",
 });
 legend.innerHTML = `<strong style="font-size:13px;color:#7ec8e3;
   display:block;margin-bottom:10px">🚢 Bản đồ vị trí tàu</strong>`;
+
 const legendRows = {};
 LEGEND_ORDER.forEach((key) => {
   const z = ZONES[key];
@@ -730,11 +959,18 @@ LEGEND_ORDER.forEach((key) => {
     transition: "background .15s",
     borderLeft: "3px solid transparent",
   });
+  // Badge: exterior = pin icon, interior = diagram icon
+  const badge =
+    z.type === "interior"
+      ? `<span style="font-size:9px;background:rgba(255,255,255,.1);
+        color:#88aabb;padding:1px 4px;border-radius:3px;margin-left:auto">📐</span>`
+      : `<span style="font-size:9px;background:rgba(255,255,255,.1);
+        color:#88aabb;padding:1px 4px;border-radius:3px;margin-left:auto">📍</span>`;
   row.innerHTML = `
     <span style="flex-shrink:0;width:11px;height:11px;background:${z.color};
       border-radius:2px;border:1px solid rgba(255,255,255,.3)"></span>
     <span style="flex:1">${z.icon} ${z.name}</span>
-    <span style="font-size:10px;color:#5588aa">›</span>`;
+    ${badge}`;
   row.addEventListener("mouseenter", () => {
     if (activeZoneKey !== key) row.style.background = "rgba(100,170,255,.1)";
   });
@@ -748,7 +984,8 @@ LEGEND_ORDER.forEach((key) => {
     }
     flyToZone(key);
     openInfoPanel(key);
-    placePin(key, meshes);
+    if (z.type === "exterior") placePin(key, meshes);
+    else removePin(); // không cần pin cho interior
   });
   legend.appendChild(row);
   legendRows[key] = row;
@@ -773,11 +1010,11 @@ hint.textContent = "⏳ Đang tải mô hình...";
 document.body.appendChild(hint);
 
 // ═══════════════════════════════════════════════════════════
-// 9.  CAMERA FLY-TO
+// 10. CAMERA FLY-TO
 // ═══════════════════════════════════════════════════════════
 let flyTarget = null,
   flyT = 1;
-const FLY_SPEED = 0.035;
+const FLY_SPEED = 0.032;
 const _sp = new THREE.Vector3(),
   _sl = new THREE.Vector3(),
   _tl = new THREE.Vector3();
@@ -789,9 +1026,9 @@ function flyToZone(key) {
   const cen = shipBBox.getCenter(new THREE.Vector3());
   const ty = shipBBox.min.y + sz.y * z.viewRelY;
   const look = new THREE.Vector3(cen.x, ty, cen.z);
-  const az = Math.PI * 0.22,
-    pol = z.viewAngle,
-    d = z.viewDist;
+  const pol = z.viewPolar,
+    d = z.viewDist,
+    az = z.viewAzimuth;
   const pos = new THREE.Vector3(
     look.x + d * Math.sin(pol) * Math.sin(az),
     look.y + d * Math.cos(pol),
@@ -810,7 +1047,7 @@ function ease(t) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 10. TẢI MODEL
+// 11. TẢI MODEL
 // ═══════════════════════════════════════════════════════════
 const raycaster = new THREE.Raycaster(),
   mouse = new THREE.Vector2();
@@ -841,15 +1078,15 @@ new GLTFLoader().load(
     camera.position.set(28, mid + 8, 36);
     controls.update();
     hint.textContent =
-      "🖱 Di chuột để xem  •  Click vào tàu hoặc legend để xem chi tiết  •  Kéo để xoay";
-    const names = [
-      ...new Set(meshes.map((m) => m.name).filter(Boolean)),
-    ].sort();
-    console.log("=== MESH NAMES ===\n" + names.join("\n"));
+      "🖱 Di chuột để xem  •  Click tàu/legend để xem chi tiết  •  📍 = pin bề mặt  •  📐 = sơ đồ mặt cắt";
+    console.log(
+      "MESH NAMES:\n",
+      [...new Set(meshes.map((m) => m.name).filter(Boolean))].sort().join("\n"),
+    );
   },
   (xhr) => {
     const p = xhr.total ? Math.round((xhr.loaded / xhr.total) * 100) : "...";
-    hint.textContent = `⏳ Đang tải mô hình... ${p}%`;
+    hint.textContent = `⏳ Đang tải... ${p}%`;
   },
   (err) => {
     console.error("❌", err);
@@ -859,7 +1096,7 @@ new GLTFLoader().load(
 );
 
 // ═══════════════════════════════════════════════════════════
-// 11. RAYCASTING
+// 12. RAYCASTING & EVENTS
 // ═══════════════════════════════════════════════════════════
 function restoreMesh() {
   if (lastMesh && lastMat) {
@@ -898,7 +1135,7 @@ window.addEventListener("mousemove", (e) => {
       metalness: 0.1,
     });
   }
-  hoverTip.innerHTML = `<span style="display:inline-block;width:9px;height:9px;
+  hoverTip.innerHTML = `<span style="display:inline-block;width:8px;height:8px;
     background:${zone.color};border-radius:50%;margin-right:6px;
     vertical-align:middle"></span>${zone.icon} ${zone.name}`;
   hoverTip.style.display = "block";
@@ -915,7 +1152,6 @@ renderer.domElement.addEventListener("mouseleave", () => {
   hoverTip.style.display = "none";
 });
 
-// Click trên mesh
 renderer.domElement.addEventListener("click", (e) => {
   if (!meshes.length || !shipBBox) return;
   mouse.x = (e.clientX / innerWidth) * 2 - 1;
@@ -931,42 +1167,38 @@ renderer.domElement.addEventListener("click", (e) => {
   const zone = detectZone(mesh, point, face, shipBBox);
   const key = Object.keys(ZONES).find((k) => ZONES[k] === zone);
   if (!key) return;
-
-  // Click vào chính vị trí mesh → đặt pin tại điểm hit chính xác
   if (activeZoneKey === key) {
     closeInfoPanel();
     return;
   }
-
   flyToZone(key);
   openInfoPanel(key);
 
-  // Đặt pin ngay tại điểm click (snap chính xác)
-  if (pinGroup) {
-    scene.remove(pinGroup);
-    pinGroup = null;
+  if (zone.type === "exterior") {
+    // Đặt pin chính xác tại điểm click
+    if (pinGroup) {
+      scene.remove(pinGroup);
+      pinGroup = null;
+    }
+    pinGroup = buildPin(zone.color);
+    pinGroup.position.copy(point);
+    _nm.getNormalMatrix(mesh.matrixWorld);
+    const wn = face.normal.clone().applyMatrix3(_nm).normalize();
+    const up = new THREE.Vector3(0, 1, 0);
+    if (Math.abs(wn.dot(up)) < 0.95) {
+      pinGroup.quaternion.copy(
+        new THREE.Quaternion().setFromUnitVectors(up, wn),
+      );
+    }
+    pinAnimT = 0;
+    scene.add(pinGroup);
+  } else {
+    removePin();
   }
-  const z = ZONES[key];
-  pinGroup = buildPin(z.color);
-
-  // Pin đứng trên bề mặt tại điểm click
-  pinGroup.position.copy(point);
-
-  // Căn chỉnh pin theo face normal (pin hướng ra khỏi bề mặt)
-  _nm.getNormalMatrix(mesh.matrixWorld);
-  const wNorm = face.normal.clone().applyMatrix3(_nm).normalize();
-  const up = new THREE.Vector3(0, 1, 0);
-  if (Math.abs(wNorm.dot(up)) < 0.95) {
-    const q = new THREE.Quaternion().setFromUnitVectors(up, wNorm);
-    pinGroup.quaternion.copy(q);
-  }
-
-  pinAnimT = 0;
-  scene.add(pinGroup);
 });
 
 // ═══════════════════════════════════════════════════════════
-// 12. RESIZE & ANIMATE
+// 13. RESIZE & ANIMATE
 // ═══════════════════════════════════════════════════════════
 window.addEventListener("resize", () => {
   camera.aspect = innerWidth / innerHeight;
@@ -977,8 +1209,6 @@ window.addEventListener("resize", () => {
 const clock = new THREE.Clock();
 (function loop() {
   requestAnimationFrame(loop);
-
-  // Camera fly
   if (flyTarget && flyT < 1) {
     flyT = Math.min(1, flyT + FLY_SPEED);
     const t = ease(flyT);
@@ -987,38 +1217,23 @@ const clock = new THREE.Clock();
     controls.target.copy(_tl);
     if (flyT >= 1) flyTarget = null;
   }
-
-  // Animate pin
   if (pinGroup) {
-    pinAnimT += clock.getDelta() * 2.2;
-
-    // Bob (nhấp nhô lên xuống) — phần thân pin
-    const bobY = Math.sin(pinAnimT * 2) * 0.08;
-
-    // Chỉ nhấp nhô phần thân (stem + cone + ball) — không nhấp vòng
+    pinAnimT += clock.getDelta() * 2.0;
+    const bob = Math.sin(pinAnimT * 2) * 0.07;
     pinGroup.children.forEach((c) => {
-      if (!c.userData.isPulse) {
-        c.position.y = c.userData.baseY ?? c.position.y;
-        // Lưu baseY lần đầu
+      if (c.userData.isPulse) {
+        const prog =
+          ((pinAnimT + c.userData.phase) % (Math.PI * 2)) / (Math.PI * 2);
+        c.scale.set(0.8 + prog * 2.6, 0.8 + prog * 2.6, 1);
+        c.material.opacity = (1 - prog) * 0.65;
+      } else {
         if (c.userData.baseY === undefined) c.userData.baseY = c.position.y;
-        c.position.y = c.userData.baseY + bobY;
+        c.position.y = c.userData.baseY + bob;
       }
     });
-
-    // Pulse rings — scale ra ngoài rồi fade
-    pinGroup.children.forEach((c) => {
-      if (!c.userData.isPulse) return;
-      const phase = (pinAnimT + c.userData.phase) % (Math.PI * 2);
-      const progress = phase / (Math.PI * 2); // 0..1
-      const s = 0.8 + progress * 2.8;
-      c.scale.set(s, s, 1);
-      c.material.opacity = (1 - progress) * 0.6;
-    });
   } else {
-    // getDelta vẫn phải gọi để không bị nhảy khi pin xuất hiện trở lại
     clock.getDelta();
   }
-
   controls.update();
   renderer.render(scene, camera);
 })();
