@@ -43,6 +43,7 @@
         background: #e8ecf0;
         -webkit-user-select: none;
         -moz-user-select: none;
+        -ms-user-select: none;
         user-select: none;
       }
 
@@ -182,7 +183,41 @@
 
     <script type="module" src="./main.js"></script>
     <script>
+      /* CHẶN CHUỘT PHẢI */
       document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+      /* CHẶN SELECT TEXT */
+      document.addEventListener("selectstart", (e) => e.preventDefault());
+
+      /* CHẶN COPY */
+      document.addEventListener("copy", (e) => e.preventDefault());
+
+      /* CHẶN PHÍM DEVTOOLS */
+      document.addEventListener("keydown", function (e) {
+        if (
+          e.key === "F12" ||
+          (e.ctrlKey && e.shiftKey && e.key === "I") ||
+          (e.ctrlKey && e.shiftKey && e.key === "C") ||
+          (e.ctrlKey && e.shiftKey && e.key === "J") ||
+          (e.ctrlKey && e.key === "U") ||
+          (e.ctrlKey && e.key === "S")
+        ) {
+          e.preventDefault();
+          return false;
+        }
+      });
+
+      /* PHÁT HIỆN DEVTOOLS */
+      setInterval(function () {
+        const widthThreshold = window.outerWidth - window.innerWidth > 160;
+        const heightThreshold = window.outerHeight - window.innerHeight > 160;
+
+        if (widthThreshold || heightThreshold) {
+          document.body.innerHTML = "";
+          alert("Developer tools are not allowed.");
+          location.reload();
+        }
+      }, 1000);
     </script>
   </body>
 </html>
