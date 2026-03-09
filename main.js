@@ -46,10 +46,12 @@ const ZONES = {
     type: "exterior",
     // relY: 0..1 (0=đáy, 1=đỉnh). Mạn ướt = vùng thấp, ngập nước ~ 15-30%
     pinCast: { from: "side_right", relY: 0.2, relXFrac: 1.0, relZFrac: 0.4 },
+    // Camera: polar=1.45 (gần ngang), azimuth=PI*0.75 (nhìn từ mạn trái-sau vào)
+    // → tàu nghiêng nhẹ, thấy rõ phần đỏ mạn ướt
     viewRelY: 0.2,
-    viewDist: 22,
-    viewAzimuth: Math.PI * 0.22,
-    viewPolar: 1.3,
+    viewDist: 24,
+    viewAzimuth: Math.PI * 0.75,
+    viewPolar: 1.45,
     description:
       "Phần vỏ tàu thường xuyên ngập trong môi trường nước khi tàu có tải. Các vị trí này cần được bảo vệ bởi hệ thống các lớp sơn chuyên dụng chống ăn mòn chất lượng cao.",
     paints: [
@@ -71,9 +73,9 @@ const ZONES = {
     // relY: Mạn khô = vùng giữa, không ngập nước ~ 35-50%
     pinCast: { from: "side_right", relY: 0.4, relXFrac: 1.0, relZFrac: 0.38 },
     viewRelY: 0.4,
-    viewDist: 22,
-    viewAzimuth: Math.PI * 0.22,
-    viewPolar: 1.35,
+    viewDist: 24,
+    viewAzimuth: Math.PI * 0.75,
+    viewPolar: 1.4,
     description:
       "Vị trí thuộc vỏ tàu ít tiếp xúc với nước, tiếp xúc thường xuyên hơn với ánh nắng. Lựa chọn hệ sơn cần giữ màu tốt và chống ăn mòn hiệu quả.",
     paints: [
@@ -725,34 +727,17 @@ function placePin(key, meshList) {
   if (z.type !== "exterior" || !shipBBox || !z.pinCast) return;
 
   const s = key === "day_tau" ? 3.5 : 1.0;
-
-  // Dùng castToSurface trực tiếp (above_cabin mode tự xử lý 2 đầu Z)
   const result = castToSurface(z.pinCast, shipBBox, meshList);
 
   pinGroup = buildPin(z.color, s);
   pinGroup.position.copy(result.point);
 
   if (key === "day_tau") {
-    // ── ĐÁY TÀU: Pin treo ngược từ đáy tàu xuống camera ────────
-    // Vấn đề cũ: pin default có cone ở dưới (-Y) nhưng camera nhìn từ dưới lên
-    // → cone "đâm vào" tàu vì stem+ball ở phía trên (trong thân tàu)
-    //
-    // Fix: FLIP pin 180° quanh trục X:
-    //   Trước flip: ball ở +1.24s (lên), cone tip ở -0.24s (xuống vào tàu)
-    //   Sau flip:   ball ở -1.24s (xuống), cone tip ở +0.24s (lên chạm đáy tàu)
-    //
-    // Rồi dịch xuống: position.y -= 0.24s
-    //   → cone tip đúng tại y_surface (chạm vỏ đáy tàu)
-    //   → stem+ball treo xuống dưới về phía camera ✓
     pinGroup.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
     pinGroup.position.y -= 0.24 * s;
   } else if (key === "thuong_tang") {
-    // ── THƯỢNG TẦNG: Pin cắm vào tường mạn cabin ────────────────
-    // scan_cabin trả về normal (1,0,0) — pin xoay để căn theo tường
-    // Cone chỉ ngang ra khỏi tường mạn (về phía camera)
     const up = new THREE.Vector3(0, 1, 0);
     const wallNorm = result.normal.clone().normalize();
-    // Căn pin: trục Y của pin = normal tường (pin nằm ngang, cone chỉ ra ngoài)
     if (Math.abs(wallNorm.dot(up)) < 0.95) {
       pinGroup.quaternion.copy(
         new THREE.Quaternion().setFromUnitVectors(up, wallNorm),
@@ -766,221 +751,21 @@ function placePin(key, meshList) {
       pinGroup.quaternion.copy(q);
     }
   }
-
   pinAnimT = 0;
   scene.add(pinGroup);
 }
 
 function removePin() {
-  if (pinGroup) {
-    scene.remove(pinGroup);
-    pinGroup = null;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-// 6.  SƠ ĐỒ MẶT CẮT 2D — CHO VÙNG BÊN TRONG
-//     Vẽ bằng SVG hiển thị trực tiếp bên cạnh info panel
-// ═══════════════════════════════════════════════════════════
-function buildCrossSectionSVG(highlightKey) {
-  const z = ZONES[highlightKey];
-  const W = 460,
-    H = 220;
-
-  // ── Định nghĩa hình dạng từng vùng trong sơ đồ ──────────
-  // Toạ độ SVG (x, y từ top-left)
-  const hullColor = "#334455";
-  const waterColor = "rgba(21,101,192,0.35)";
-
-  // Vùng tô highlight
-  const dz = z.diagramZone;
-  const hx = dz.x * W,
-    hy = dz.y * H,
-    hw = dz.w * W,
-    hh = dz.h * H;
-
-  const zones2d = [
-    // key, x, y, w, h, label, labelX, labelY
-    [
-      "day_tau",
-      0.03 * W,
-      0.78 * H,
-      0.94 * W,
-      0.18 * H,
-      "Đáy Tàu",
-      0.5 * W,
-      0.885 * H,
-    ],
-    [
-      "man_uot",
-      0.01 * W,
-      0.55 * H,
-      0.05 * W,
-      0.23 * H,
-      "Mạn Ướt",
-      -12,
-      0.67 * H,
-    ],
-    ["man_uot_r", 0.94 * W, 0.55 * H, 0.05 * W, 0.23 * H, null, null, null],
-    [
-      "man_kho",
-      0.01 * W,
-      0.32 * H,
-      0.05 * W,
-      0.23 * H,
-      "Mạn Khô",
-      -12,
-      0.44 * H,
-    ],
-    ["man_kho_r", 0.94 * W, 0.32 * H, 0.05 * W, 0.23 * H, null, null, null],
-    [
-      "ham_hang",
-      0.1 * W,
-      0.22 * H,
-      0.8 * W,
-      0.55 * H,
-      "Hầm Hàng",
-      0.5 * W,
-      0.49 * H,
-    ],
-    [
-      "he_thong_khung",
-      0.06 * W,
-      0.18 * H,
-      0.88 * W,
-      0.62 * H,
-      "Khung Xương",
-      0.5 * W,
-      0.5 * H,
-    ],
-    [
-      "mat_boong",
-      0.06 * W,
-      0.18 * H,
-      0.88 * W,
-      0.06 * H,
-      "Mặt Boong",
-      0.5 * W,
-      0.215 * H,
-    ],
-    [
-      "thuong_tang",
-      0.28 * W,
-      0.02 * H,
-      0.44 * W,
-      0.17 * H,
-      "Thượng Tầng",
-      0.5 * W,
-      0.09 * H,
-    ],
-  ];
-
-  // Chỉ lấy zones cần vẽ (không phải _r variants)
-  const drawZones = zones2d.filter((z) => !z[0].endsWith("_r"));
-  // Các zones của cùng nhóm (left+right mạn)
-  const allRects = zones2d;
-
-  // Màu fill cho từng zone (mờ)
-  function getFill(k) {
-    if (k === highlightKey) return z.color + "cc";
-    const zz = ZONES[k];
-    return zz ? zz.color + "33" : "#ffffff11";
-  }
-  function getStroke(k) {
-    if (k === highlightKey) return z.color;
-    const zz = ZONES[k];
-    return zz ? zz.color + "88" : "#ffffff44";
-  }
-
-  // Vẽ SVG
-  let rects = "";
-  for (const [k, x, y, w, h] of allRects) {
-    const baseKey = k.replace("_r", "");
-    rects += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}"
-      width="${w.toFixed(1)}" height="${h.toFixed(1)}"
-      fill="${getFill(baseKey)}" stroke="${getStroke(baseKey)}"
-      stroke-width="${k === highlightKey ? 2 : 1}" rx="3"/>`;
-  }
-
-  // Mũi tàu (phải)
-  rects += `<polygon points="${(0.97 * W).toFixed(1)},${(0.22 * H).toFixed(1)}
-    ${(1.0 * W).toFixed(1)},${(0.55 * H).toFixed(1)}
-    ${(0.97 * W).toFixed(1)},${(0.96 * H).toFixed(1)}"
-    fill="${hullColor}" stroke="#4488aa88" stroke-width="1"/>`;
-  // Đuôi tàu (trái)
-  rects += `<polygon points="${(0.03 * W).toFixed(1)},${(0.22 * H).toFixed(1)}
-    ${(0.0 * W).toFixed(1)},${(0.55 * H).toFixed(1)}
-    ${(0.03 * W).toFixed(1)},${(0.96 * H).toFixed(1)}"
-    fill="${hullColor}" stroke="#4488aa88" stroke-width="1"/>`;
-
-  // Đường mực nước
-  const wLine = (0.63 * H).toFixed(1);
-  rects += `<line x1="0" y1="${wLine}" x2="${W}" y2="${wLine}"
-    stroke="#1565c0" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.8"/>
-  <text x="${(W - 4).toFixed(0)}" y="${(parseFloat(wLine) - 4).toFixed(0)}"
-    font-size="9" fill="#64b5f6" text-anchor="end" font-family="sans-serif">
-    Mực nước
-  </text>`;
-
-  // Labels
-  let labels = "";
-  for (const [k, x, y, w, h, lbl, lx, ly] of drawZones) {
-    if (!lbl || lx === null) continue;
-    const isHL = k === highlightKey;
-    labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}"
-      font-size="${isHL ? 12 : 9}" font-weight="${isHL ? "700" : "400"}"
-      fill="${isHL ? "#fff" : ZONES[k]?.color + "bb" || "#888"}"
-      text-anchor="middle" font-family="sans-serif"
-      dominant-baseline="middle">${lbl}</text>`;
-  }
-
-  // Mũi tên chỉ vào vùng highlight
-  const arrowX = (hx + hw * 0.5).toFixed(1);
-  const arrowY = (hy - 18).toFixed(1);
-  const arrowTip = (hy - 2).toFixed(1);
-  const arrowLabel = `
-    <line x1="${arrowX}" y1="${arrowY}" x2="${arrowX}" y2="${arrowTip}"
-      stroke="${z.color}" stroke-width="2" marker-end="url(#arr)"/>
-    <text x="${arrowX}" y="${(parseFloat(arrowY) - 8).toFixed(1)}"
-      font-size="11" font-weight="700" fill="${z.color}"
-      text-anchor="middle" font-family="sans-serif">
-      ${z.icon} ${z.name}
-    </text>`;
-
-  return `<svg xmlns="http://www.w3.org/2000/svg"
-    width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
-    style="border-radius:8px;background:#0a1520;display:block;max-width:100%">
-    <defs>
-      <marker id="arr" markerWidth="8" markerHeight="8"
-        refX="4" refY="4" orient="auto">
-        <path d="M0,0 L8,4 L0,8 Z" fill="${z.color}"/>
-      </marker>
-    </defs>
-    ${rects}${labels}${arrowLabel}
-  </svg>`;
+  /* PIN đã tắt — hàm giữ lại để tránh lỗi tham chiếu */
 }
 
 // ═══════════════════════════════════════════════════════════
 // 7.  HOVER TOOLTIP
 // ═══════════════════════════════════════════════════════════
+// Tooltip hover đã bị tắt (nhận diện zone khi hover không đủ chính xác)
+// Dùng CLICK hoặc LEGEND để xem thông tin zone
 const hoverTip = document.getElementById("tooltip");
-Object.assign(hoverTip.style, {
-  position: "fixed",
-  pointerEvents: "none",
-  display: "none",
-  background: "rgba(5,12,26,0.92)",
-  color: "#f0f4ff",
-  padding: "7px 13px",
-  borderRadius: "7px",
-  fontSize: "12px",
-  fontWeight: "600",
-  lineHeight: "1.4",
-  backdropFilter: "blur(8px)",
-  border: "1px solid rgba(100,170,255,0.22)",
-  boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
-  zIndex: "1001",
-  whiteSpace: "nowrap",
-});
+hoverTip.style.display = "none"; // luôn ẩn
 
 // ═══════════════════════════════════════════════════════════
 // 8.  INFO PANEL
@@ -1018,18 +803,24 @@ function openInfoPanel(key) {
       k === key ? `3px solid ${ZONES[k].color}` : "3px solid transparent";
   });
 
-  // Sơ đồ mặt cắt cho vùng interior
+  // Ảnh thực tế thay thế sơ đồ SVG
+  const DIAGRAM_IMAGES = {
+    ham_hang: "./images/ham-hang.png",
+    he_thong_khung: "./images/khung-xuong-tau.png",
+  };
+
   const diagramHTML =
     z.type === "interior"
       ? `
     <div style="padding:14px 20px 4px;border-bottom:1px solid rgba(100,170,255,.12)">
       <div style="font-size:11px;font-weight:700;letter-spacing:.7px;
-        color:#7ec8e3;margin-bottom:10px">📐 SƠ ĐỒ MẶT CẮT NGANG TÀU</div>
-      <div style="overflow-x:auto">
-        ${buildCrossSectionSVG(key)}
-      </div>
-      <div style="font-size:10px;color:#556677;margin-top:6px;text-align:center">
-        ↑ Vùng được đánh dấu trong sơ đồ mặt cắt
+        color:#7ec8e3;margin-bottom:10px">🖼 HÌNH ẢNH MINH HỌA</div>
+      <div style="border-radius:10px;overflow:hidden;
+        border:1px solid rgba(100,170,255,.20);background:#0a1020">
+        <img src="${DIAGRAM_IMAGES[key]}"
+          alt="${z.name}"
+          style="width:100%;display:block;object-fit:cover;
+            max-height:200px;opacity:0.93" />
       </div>
     </div>`
       : "";
@@ -1136,13 +927,13 @@ LEGEND_ORDER.forEach((key) => {
     transition: "background .15s",
     borderLeft: "3px solid transparent",
   });
-  // Badge: exterior = pin icon, interior = diagram icon
+  // Badge: exterior = pin icon, interior = image icon
   const badge =
     z.type === "interior"
       ? `<span style="font-size:9px;background:rgba(255,255,255,.1);
-        color:#88aabb;padding:1px 4px;border-radius:3px;margin-left:auto">📐</span>`
+        color:#88aabb;padding:1px 4px;border-radius:3px;margin-left:auto">🖼</span>`
       : `<span style="font-size:9px;background:rgba(255,255,255,.1);
-        color:#88aabb;padding:1px 4px;border-radius:3px;margin-left:auto">📍</span>`;
+        color:#88aabb;padding:1px 4px;border-radius:3px;margin-left:auto">🔍</span>`;
   row.innerHTML = `
     <span style="flex-shrink:0;width:11px;height:11px;background:${z.color};
       border-radius:2px;border:1px solid rgba(255,255,255,.3)"></span>
@@ -1157,15 +948,12 @@ LEGEND_ORDER.forEach((key) => {
   row.addEventListener("click", () => {
     if (activeZoneKey === key) {
       closeInfoPanel();
+      removePin();
       return;
     }
-    // Thượng tầng: placePin trước để detect vị trí cabin, rồi mới fly
-    if (z.type === "exterior") {
-      placePin(key, meshes); // sets ZONES.thuong_tang._resolvedZFrac nếu cần
-    } else {
-      removePin();
-    }
-    flyToZone(key); // dùng _resolvedZFrac đã detect ở trên
+    if (z.type === "exterior") placePin(key, meshes);
+    else removePin();
+    flyToZone(key);
     openInfoPanel(key);
   });
   legend.appendChild(row);
@@ -1272,7 +1060,7 @@ new GLTFLoader().load(
     camera.position.set(28, mid + 8, 36);
     controls.update();
     hint.textContent =
-      "🖱 Di chuột để xem  •  Click tàu/legend để xem chi tiết  •  📍 = pin bề mặt  •  📐 = sơ đồ mặt cắt";
+      "🖱 Kéo để xoay  •  Click menu bên trái để xem chi tiết từng khu vực  •  🖼 = ảnh minh họa";
     console.log(
       "MESH NAMES:\n",
       [...new Set(meshes.map((m) => m.name).filter(Boolean))].sort().join("\n"),
@@ -1300,151 +1088,33 @@ function restoreMesh() {
   }
 }
 
-// ── Debounce & zone-lock để chống nhảy tooltip ──
-let hoverZoneKey = null; // zone đang hiển thị tooltip
-let hoverLockCount = 0; // số frame liên tiếp cùng zone
-let pendingZoneKey = null; // zone đang "ứng cử"
-let pendingCount = 0;
-const ZONE_LOCK_FRAMES = 4; // phải ổn định N frame mới đổi
-
+// ── Hover: CHỈ đổi cursor, KHÔNG hiển thị tooltip ──
+// Tooltip bị tắt vì nhận diện zone khi hover không đủ chính xác.
+// Người dùng dùng CLICK hoặc LEGEND để xem thông tin zone.
 window.addEventListener("mousemove", (e) => {
   if (!meshes.length || !shipBBox) return;
   mouse.x = (e.clientX / innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
-
-  // Tăng far để bắt được đáy tàu khi nhìn từ dưới
   raycaster.far = 200;
-
   const hits = raycaster.intersectObjects(meshes, false);
-  if (!hits.length) {
-    restoreMesh();
-    hoverTip.style.display = "none";
-    renderer.domElement.style.cursor = "grab";
-    hoverZoneKey = null;
-    hoverLockCount = 0;
-    pendingZoneKey = null;
-    pendingCount = 0;
-    return;
-  }
-
-  const { object: mesh, point, face } = hits[0];
-  if (!face) return;
-  const zone = detectZone(mesh, point, face, shipBBox);
-  const key = Object.keys(ZONES).find((k) => ZONES[k] === zone) || "man_kho";
-
-  // ── Zone-lock logic: chỉ đổi tooltip khi zone ổn định N frame ──
-  if (key === hoverZoneKey) {
-    hoverLockCount++;
-    pendingZoneKey = null;
-    pendingCount = 0;
-  } else if (key === pendingZoneKey) {
-    pendingCount++;
-    if (pendingCount >= ZONE_LOCK_FRAMES) {
-      // Chấp nhận zone mới
-      restoreMesh();
-      hoverZoneKey = key;
-      hoverLockCount = 0;
-      pendingZoneKey = null;
-      pendingCount = 0;
-    }
-  } else {
-    pendingZoneKey = key;
-    pendingCount = 1;
-  }
-
-  // Highlight mesh theo zone đã lock (không theo pending)
-  const displayZone = ZONES[hoverZoneKey || key];
-  if (mesh !== lastMesh) {
-    restoreMesh();
-    lastMesh = mesh;
-    lastMat = mesh.material;
-    mesh.material = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(displayZone.color),
-      emissive: new THREE.Color(displayZone.color),
-      emissiveIntensity: 0.55,
-      transparent: true,
-      opacity: 0.9,
-      roughness: 0.3,
-      metalness: 0.1,
-    });
-  }
-
-  // Tooltip chỉ hiện zone đã lock
-  const tipZone = ZONES[hoverZoneKey || key];
-  hoverTip.innerHTML = `<span style="display:inline-block;width:8px;height:8px;
-    background:${tipZone.color};border-radius:50%;margin-right:6px;
-    vertical-align:middle"></span>${tipZone.icon} ${tipZone.name}`;
-  hoverTip.style.display = "block";
-  const tw = hoverTip.offsetWidth + 10;
-  hoverTip.style.left =
-    (e.clientX + 18 + tw > innerWidth ? e.clientX - tw - 8 : e.clientX + 18) +
-    "px";
-  hoverTip.style.top =
-    (e.clientY + 32 > innerHeight ? e.clientY - 36 : e.clientY + 14) + "px";
-  renderer.domElement.style.cursor = "crosshair";
+  renderer.domElement.style.cursor = hits.length ? "crosshair" : "grab";
 });
 renderer.domElement.addEventListener("mouseleave", () => {
   restoreMesh();
-  hoverTip.style.display = "none";
-  hoverZoneKey = null;
-  hoverLockCount = 0;
-  pendingZoneKey = null;
-  pendingCount = 0;
+  renderer.domElement.style.cursor = "grab";
 });
 
+// Click trực tiếp lên tàu: KHÔNG làm gì (chỉ đóng panel nếu click ngoài)
 renderer.domElement.addEventListener("click", (e) => {
   if (!meshes.length || !shipBBox) return;
   mouse.x = (e.clientX / innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   const hits = raycaster.intersectObjects(meshes, false);
-  if (!hits.length) {
-    closeInfoPanel();
-    return;
-  }
-  const { object: mesh, point, face } = hits[0];
-  if (!face) return;
-  const zone = detectZone(mesh, point, face, shipBBox);
-  const key = Object.keys(ZONES).find((k) => ZONES[k] === zone);
-  if (!key) return;
-  if (activeZoneKey === key) {
-    closeInfoPanel();
-    return;
-  }
-  flyToZone(key);
-  openInfoPanel(key);
-
-  if (zone.type === "exterior") {
-    // Đặt pin chính xác tại điểm click
-    if (pinGroup) {
-      scene.remove(pinGroup);
-      pinGroup = null;
-    }
-    const cs = key === "day_tau" ? 3.5 : 1.0;
-    pinGroup = buildPin(zone.color, cs);
-    pinGroup.position.copy(point);
-
-    if (key === "day_tau") {
-      // Flip 180° + dịch: cone tip chạm đáy, stem+ball treo xuống camera
-      pinGroup.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
-      pinGroup.position.y -= 0.24 * cs;
-    } else {
-      // Căn theo normal bề mặt
-      _nm.getNormalMatrix(mesh.matrixWorld);
-      const wn = face.normal.clone().applyMatrix3(_nm).normalize();
-      const up = new THREE.Vector3(0, 1, 0);
-      if (Math.abs(wn.dot(up)) < 0.95) {
-        pinGroup.quaternion.copy(
-          new THREE.Quaternion().setFromUnitVectors(up, wn),
-        );
-      }
-    }
-    pinAnimT = 0;
-    scene.add(pinGroup);
-  } else {
-    removePin();
-  }
+  // Click vào khoảng trống → đóng panel
+  if (!hits.length) closeInfoPanel();
+  // Click vào tàu → không làm gì (dùng legend bên trái)
 });
 
 // ═══════════════════════════════════════════════════════════
