@@ -18,11 +18,13 @@ const ZONES = {
     color: "#29b6f6",
     icon: "⚓",
     type: "exterior",
-    pinCast: { from: "below", relY: 0.02, relXFrac: 0.5, relZFrac: 0.45 },
-    viewRelY: 0.06,
-    viewDist: 22,
-    viewAzimuth: Math.PI * 0.5,
-    viewPolar: 1.35,
+    pinCast: { from: "below", relY: 0.01, relXFrac: 0.5, relZFrac: 0.5 },
+    // polar=2.1 → camera chui xuống dưới đáy tàu nhìn lên
+    // dist=18 gần hơn để pin to rõ hơn
+    viewRelY: 0.02,
+    viewDist: 18,
+    viewAzimuth: Math.PI * 0.45,
+    viewPolar: 2.1,
     description:
       "Phần luôn ngập trong nước của tàu, chịu sự tấn công của rất nhiều tác nhân ăn mòn trong những điều kiện khắc nghiệt. Hệ thống sơn bảo vệ bao gồm lớp chống ăn mòn và lớp chống bám bẩu của sinh vật biển.",
     paints: [
@@ -42,8 +44,9 @@ const ZONES = {
     color: "#1565c0",
     icon: "🌊",
     type: "exterior",
-    pinCast: { from: "side_right", relY: 0.28, relXFrac: 1.0, relZFrac: 0.4 },
-    viewRelY: 0.28,
+    // relY: 0..1 (0=đáy, 1=đỉnh). Mạn ướt = vùng thấp, ngập nước ~ 15-30%
+    pinCast: { from: "side_right", relY: 0.2, relXFrac: 1.0, relZFrac: 0.4 },
+    viewRelY: 0.2,
     viewDist: 22,
     viewAzimuth: Math.PI * 0.22,
     viewPolar: 1.3,
@@ -65,8 +68,9 @@ const ZONES = {
     color: "#c62828",
     icon: "☀️",
     type: "exterior",
-    pinCast: { from: "side_right", relY: 0.5, relXFrac: 1.0, relZFrac: 0.38 },
-    viewRelY: 0.48,
+    // relY: Mạn khô = vùng giữa, không ngập nước ~ 35-50%
+    pinCast: { from: "side_right", relY: 0.4, relXFrac: 1.0, relZFrac: 0.38 },
+    viewRelY: 0.4,
     viewDist: 22,
     viewAzimuth: Math.PI * 0.22,
     viewPolar: 1.35,
@@ -169,11 +173,18 @@ const ZONES = {
     color: "#78909c",
     icon: "🏠",
     type: "exterior",
-    pinCast: { from: "front", relY: 0.82, relXFrac: 0.5, relZFrac: 0.0 },
-    viewRelY: 0.82,
-    viewDist: 18,
-    viewAzimuth: Math.PI * -0.15,
-    viewPolar: 1.1,
+    // ── TUNING THƯỢNG TẦNG ──────────────────────────────────────
+    // from:"scan_cabin" → tự động quét 12 điểm Z tìm tường cabin
+    // Không cần sửa relZFrac (được tự tính)
+    // Nếu muốn sửa thủ công: đổi from:"side_right" và chỉnh relZFrac
+    //   relZFrac: 0..1 (0=đầu min.z, 1=đầu max.z)
+    //   relY: 0..1 (0=đáy, 1=đỉnh) — cabin ở khoảng 0.75-0.85
+    pinCast: { from: "scan_cabin", relY: 0.78, relXFrac: 1.0, relZFrac: 0.5 },
+    // Camera: viewAzimuth sẽ được tự điều chỉnh theo vị trí cabin detect được
+    viewRelY: 0.8,
+    viewDist: 16,
+    viewAzimuth: Math.PI * 0.22,
+    viewPolar: 0.95,
     description:
       "Khu vực thượng tầng tàu, bao gồm cabin và các công trình trên boong. Tiếp xúc nhiều với thời tiết, ánh nắng và mưa bão. Yêu cầu thẩm mỹ cao bên cạnh khả năng bảo vệ.",
     paints: [
@@ -337,41 +348,113 @@ function zoneByName(n) {
 
 const _nm = new THREE.Matrix3(),
   _wn = new THREE.Vector3();
+
+// ── zoneByPhysics: phân loại vùng dựa trên normal + vị trí ────────────
+// ĐÃ TINH CHỈNH dựa trên tỉ lệ thực tế của tàu hàng bulk carrier:
+//
+//  relY (chiều cao tương đối 0..1):
+//   0.00 - 0.13 → Đáy tàu
+//   0.13 - 0.30 → Mạn Ướt  (ngập nước khi đầy tải)
+//   0.30 - 0.58 → Mạn Khô  (trên đường nước)
+//   0.58 - 0.76 → Mặt Boong / Lối Đi
+//   0.76 - 1.00 → Thượng Tầng / Cabin
+//
+//  Bề mặt nằm ngang (ny > 0.55) luôn là Boong hoặc Hầm hàng
+//  Bề mặt mặt dưới (ny < -0.50) luôn là Đáy hoặc Khung xương
+//
 function zoneByPhysics(wn, relY, relX) {
   const ny = wn.y,
     nx = Math.abs(wn.x),
     nz = Math.abs(wn.z);
-  if (ny > 0.6) {
-    if (relY < 0.1) return ZONES.day_tau;
-    if (relY > 0.56 && relX < 0.62) return ZONES.ham_hang;
+
+  // Bề mặt NẰM NGANG hướng lên (boong, nắp hầm, mái cabin)
+  if (ny > 0.55) {
+    if (relY < 0.12) return ZONES.day_tau;
+    // Trung tâm + cao = hầm hàng (nắp hatch)
+    if (relY > 0.55 && relX < 0.6) return ZONES.ham_hang;
     return ZONES.mat_boong;
   }
-  if (ny < -0.55) {
-    if (relY < 0.12) return ZONES.day_tau;
+
+  // Bề mặt NẰM NGANG hướng xuống (đáy tàu, sườn ngang)
+  if (ny < -0.5) {
+    if (relY < 0.14) return ZONES.day_tau;
     return ZONES.he_thong_khung;
   }
-  // Vertical surfaces
-  if (relY > 0.56 && relX < 0.68 && (nx > 0.28 || nz > 0.28))
+
+  // Bề mặt THẲNG ĐỨNG / NGHIÊNG (mạn tàu, tường cabin, hầm)
+  // Ưu tiên: nếu normal có thành phần Y đáng kể = mặt nghiêng → boong
+  if (ny > 0.3 && relY > 0.5) return ZONES.mat_boong;
+
+  // Tường thẳng đứng tại vùng cao + giữa tàu = hầm hàng
+  if (relY > 0.56 && relX < 0.65 && (nx > 0.25 || nz > 0.25))
     return ZONES.ham_hang;
-  if (relY > 0.74) return ZONES.thuong_tang;
-  if (relY < 0.14) return ZONES.day_tau;
-  if (relY < 0.32) return ZONES.man_uot;
-  if (relY < 0.56) return ZONES.man_kho;
-  if (relY < 0.74) return ZONES.mat_boong;
+
+  // Phân loại theo chiều cao
+  if (relY > 0.76) return ZONES.thuong_tang;
+  if (relY < 0.13) return ZONES.day_tau;
+  if (relY < 0.3) return ZONES.man_uot;
+  if (relY < 0.58) return ZONES.man_kho;
+  if (relY < 0.76) return ZONES.mat_boong;
   return ZONES.thuong_tang;
 }
 
+// ── detectZone: nhận diện vùng với MULTI-SAMPLE VOTING ────────────────
+// Thay vì dùng 1 điểm duy nhất (dễ sai ở ranh giới), lấy mẫu thêm
+// 4 điểm lân cận rồi bỏ phiếu → kết quả ổn định hơn nhiều
+//
+const _voteRC = new THREE.Raycaster();
+
 function detectZone(mesh, point, face, bbox) {
-  const n = zoneByName(mesh.name);
-  if (n) return n;
+  // Ưu tiên tuyệt đối: tên mesh khớp từ khóa
+  const byName = zoneByName(mesh.name);
+  if (byName) return byName;
   if (!bbox || !face) return ZONES.man_kho;
+
   const sz = bbox.getSize(new THREE.Vector3());
   const relY = Math.max(0, Math.min(1, (point.y - bbox.min.y) / sz.y));
   const relX =
     Math.abs(point.x - (bbox.min.x + sz.x * 0.5)) / (sz.x * 0.5 + 0.001);
   _nm.getNormalMatrix(mesh.matrixWorld);
   _wn.copy(face.normal).applyMatrix3(_nm).normalize();
-  return zoneByPhysics(_wn, relY, relX);
+
+  const primary = zoneByPhysics(_wn, relY, relX);
+
+  // ── VOTE: kiểm tra 4 điểm lân cận nhỏ (+/-0.15 units theo normal) ──
+  // Nếu đa số đồng ý với primary → dùng primary (tránh nhảy ở ranh giới)
+  const OFFSET = 0.18;
+  const neighbors = [
+    new THREE.Vector3(OFFSET, 0, 0),
+    new THREE.Vector3(-OFFSET, 0, 0),
+    new THREE.Vector3(0, OFFSET, 0),
+    new THREE.Vector3(0, -OFFSET, 0),
+  ];
+
+  let votes = {}; // zoneKey → count
+  const addVote = (z) => {
+    const k = Object.keys(ZONES).find((k) => ZONES[k] === z) || "man_kho";
+    votes[k] = (votes[k] || 0) + 1;
+  };
+  addVote(primary);
+  addVote(primary); // primary có trọng số 2
+
+  for (const off of neighbors) {
+    const samplePt = point.clone().add(off);
+    const relYs = Math.max(0, Math.min(1, (samplePt.y - bbox.min.y) / sz.y));
+    const relXs =
+      Math.abs(samplePt.x - (bbox.min.x + sz.x * 0.5)) / (sz.x * 0.5 + 0.001);
+    addVote(zoneByPhysics(_wn, relYs, relXs));
+  }
+
+  // Tìm zone nhiều phiếu nhất
+  let winner = "man_kho",
+    maxV = 0;
+  for (const [k, v] of Object.entries(votes)) {
+    if (v > maxV) {
+      maxV = v;
+      winner = k;
+    }
+  }
+  return ZONES[winner] || primary;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -430,11 +513,11 @@ let pinGroup = null,
   pinAnimT = 0;
 const _castRC = new THREE.Raycaster();
 
-function buildPin(color) {
+function buildPin(color, s = 1.0) {
   const grp = new THREE.Group();
   const col = new THREE.Color(color);
   const stem = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.035, 0.035, 1.2, 8),
+    new THREE.CylinderGeometry(0.035 * s, 0.035 * s, 1.2 * s, 8),
     new THREE.MeshStandardMaterial({
       color: col,
       emissive: col,
@@ -442,10 +525,10 @@ function buildPin(color) {
       roughness: 0.2,
     }),
   );
-  stem.position.y = 0.6;
+  stem.position.y = 0.6 * s;
   grp.add(stem);
   const cone = new THREE.Mesh(
-    new THREE.ConeGeometry(0.2, 0.4, 12),
+    new THREE.ConeGeometry(0.2 * s, 0.4 * s, 12),
     new THREE.MeshStandardMaterial({
       color: col,
       emissive: col,
@@ -454,10 +537,10 @@ function buildPin(color) {
     }),
   );
   cone.rotation.z = Math.PI;
-  cone.position.y = -0.04;
+  cone.position.y = -0.04 * s;
   grp.add(cone);
   const ball = new THREE.Mesh(
-    new THREE.SphereGeometry(0.16, 14, 14),
+    new THREE.SphereGeometry(0.16 * s, 14, 14),
     new THREE.MeshStandardMaterial({
       color: col,
       emissive: col,
@@ -466,12 +549,12 @@ function buildPin(color) {
       metalness: 0.3,
     }),
   );
-  ball.position.y = 1.24;
+  ball.position.y = 1.24 * s;
   grp.add(ball);
   // Pulse rings
   for (let i = 0; i < 2; i++) {
     const r = new THREE.Mesh(
-      new THREE.RingGeometry(0.25, 0.38, 32),
+      new THREE.RingGeometry(0.25 * s, 0.38 * s, 32),
       new THREE.MeshBasicMaterial({
         color: col,
         transparent: true,
@@ -486,7 +569,7 @@ function buildPin(color) {
     grp.add(r);
   }
   const base = new THREE.Mesh(
-    new THREE.RingGeometry(0.15, 0.26, 32),
+    new THREE.RingGeometry(0.15 * s, 0.26 * s, 32),
     new THREE.MeshBasicMaterial({
       color: col,
       transparent: true,
@@ -501,23 +584,81 @@ function buildPin(color) {
 }
 
 /**
- * Tìm điểm bề mặt chính xác bằng cách bắn tia từ ngoài vào
- * from: "above"|"below"|"side_right"|"side_left"|"front"|"back"
+ * ═══════════════════════════════════════════════════════
+ *  castToSurface — bắn tia tìm điểm trên bề mặt tàu
+ *
+ *  cfg.from:
+ *   "above"      → từ trên xuống
+ *   "below"      → từ dưới lên
+ *   "side_right" → từ mạn phải (X+) vào
+ *   "side_left"  → từ mạn trái (X-) vào
+ *   "front"      → từ mũi (Z-) vào
+ *   "back"       → từ đuôi (Z+) vào
+ *   "scan_cabin" → quét 12 điểm Z để tìm tường cabin
+ *
+ *  cfg.relY    = 0..1  (chiều cao tương đối trong bbox)
+ *  cfg.relXFrac= 0..1  (X tương đối)
+ *  cfg.relZFrac= 0..1  (Z tương đối)
+ * ═══════════════════════════════════════════════════════
  */
 function castToSurface(cfg, bbox, meshList) {
   const sz = bbox.getSize(new THREE.Vector3());
   const min = bbox.min,
     max = bbox.max;
-  const cx = (min.x + max.x) * 0.5,
-    cy = (min.y + max.y) * 0.5,
-    cz = (min.z + max.z) * 0.5;
+  const cx = (min.x + max.x) * 0.5;
+  const MARGIN = 5;
 
+  // ── SCAN_CABIN: quét 12 điểm Z từ side_right ──────────
+  // Cabin = cấu trúc có diện tích RỘNG nhất ở độ cao cao (relY 0.72-0.88)
+  // → tìm nhóm Z liên tiếp có hit side_right tại độ cao đó
+  if (cfg.from === "scan_cabin") {
+    const cabinRelY = 0.78; // độ cao quét (cabin cao hơn boong)
+    const ty = min.y + sz.y * cabinRelY;
+    const STEPS = 12;
+    const hits12 = [];
+
+    for (let i = 0; i < STEPS; i++) {
+      const frac = 0.05 + (i / (STEPS - 1)) * 0.9; // 0.05 → 0.95
+      const tz = min.z + sz.z * frac;
+      const org = new THREE.Vector3(max.x + MARGIN, ty, tz);
+      const dir = new THREE.Vector3(-1, 0, 0);
+      _castRC.set(org, dir.normalize());
+      _castRC.far = sz.x + MARGIN * 2;
+      const h = _castRC.intersectObjects(meshList, false);
+      hits12.push(h.length > 0 ? { frac, point: h[0].point.clone() } : null);
+    }
+
+    // Tìm nhóm liên tiếp dài nhất có hit (= tường cabin, rộng hơn cột cẩu)
+    let bestGroup = [],
+      curGroup = [];
+    for (const h of hits12) {
+      if (h) {
+        curGroup.push(h);
+        if (curGroup.length > bestGroup.length) bestGroup = [...curGroup];
+      } else curGroup = [];
+    }
+
+    if (bestGroup.length) {
+      // Lấy điểm giữa nhóm dài nhất
+      const mid = bestGroup[Math.floor(bestGroup.length / 2)];
+      // Lưu lại ZFrac để flyToZone dùng
+      ZONES.thuong_tang._resolvedZFrac = mid.frac;
+      return { point: mid.point.clone(), normal: new THREE.Vector3(1, 0, 0) };
+    }
+    // Fallback: giữa tàu
+    ZONES.thuong_tang._resolvedZFrac = 0.5;
+    return {
+      point: new THREE.Vector3(cx, ty, min.z + sz.z * 0.5),
+      normal: new THREE.Vector3(1, 0, 0),
+    };
+  }
+
+  // ── Các mode thông thường ──────────────────────────────
   const tx = min.x + sz.x * cfg.relXFrac;
   const ty = min.y + sz.y * cfg.relY;
   const tz = min.z + sz.z * cfg.relZFrac;
-
   let origin, dir;
-  const MARGIN = 4;
+
   switch (cfg.from) {
     case "above":
       origin = new THREE.Vector3(tx, max.y + MARGIN, tz);
@@ -544,7 +685,7 @@ function castToSurface(cfg, bbox, meshList) {
       dir = new THREE.Vector3(0, 0, -1);
       break;
     default:
-      origin = new THREE.Vector3(cx, max.y + MARGIN, cz);
+      origin = new THREE.Vector3(cx, max.y + MARGIN, min.z + sz.z * 0.5);
       dir = new THREE.Vector3(0, -1, 0);
   }
 
@@ -553,11 +694,15 @@ function castToSurface(cfg, bbox, meshList) {
   const hits = _castRC.intersectObjects(meshList, false);
 
   if (hits.length) {
-    // Tìm hit gần target nhất về Y
-    let best = hits[0];
-    for (const h of hits) {
-      if (Math.abs(h.point.y - ty) < Math.abs(best.point.y - ty)) best = h;
-    }
+    // "below" và "above": hit đầu tiên là bề mặt ngoài cùng
+    const best =
+      cfg.from === "below" || cfg.from === "above"
+        ? hits[0]
+        : hits.reduce(
+            (b, h) =>
+              Math.abs(h.point.y - ty) < Math.abs(b.point.y - ty) ? h : b,
+            hits[0],
+          );
     return {
       point: best.point.clone(),
       normal: best.face
@@ -568,7 +713,6 @@ function castToSurface(cfg, bbox, meshList) {
         : dir.clone().negate(),
     };
   }
-  // Fallback: vị trí ước lượng
   return { point: new THREE.Vector3(tx, ty, tz), normal: dir.clone().negate() };
 }
 
@@ -580,17 +724,49 @@ function placePin(key, meshList) {
   const z = ZONES[key];
   if (z.type !== "exterior" || !shipBBox || !z.pinCast) return;
 
+  const s = key === "day_tau" ? 3.5 : 1.0;
+
+  // Dùng castToSurface trực tiếp (above_cabin mode tự xử lý 2 đầu Z)
   const result = castToSurface(z.pinCast, shipBBox, meshList);
-  pinGroup = buildPin(z.color);
+
+  pinGroup = buildPin(z.color, s);
   pinGroup.position.copy(result.point);
 
-  // Căn pin theo normal bề mặt
-  const up = new THREE.Vector3(0, 1, 0);
-  const dot = result.normal.dot(up);
-  if (Math.abs(dot) < 0.95) {
-    const q = new THREE.Quaternion().setFromUnitVectors(up, result.normal);
-    pinGroup.quaternion.copy(q);
+  if (key === "day_tau") {
+    // ── ĐÁY TÀU: Pin treo ngược từ đáy tàu xuống camera ────────
+    // Vấn đề cũ: pin default có cone ở dưới (-Y) nhưng camera nhìn từ dưới lên
+    // → cone "đâm vào" tàu vì stem+ball ở phía trên (trong thân tàu)
+    //
+    // Fix: FLIP pin 180° quanh trục X:
+    //   Trước flip: ball ở +1.24s (lên), cone tip ở -0.24s (xuống vào tàu)
+    //   Sau flip:   ball ở -1.24s (xuống), cone tip ở +0.24s (lên chạm đáy tàu)
+    //
+    // Rồi dịch xuống: position.y -= 0.24s
+    //   → cone tip đúng tại y_surface (chạm vỏ đáy tàu)
+    //   → stem+ball treo xuống dưới về phía camera ✓
+    pinGroup.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
+    pinGroup.position.y -= 0.24 * s;
+  } else if (key === "thuong_tang") {
+    // ── THƯỢNG TẦNG: Pin cắm vào tường mạn cabin ────────────────
+    // scan_cabin trả về normal (1,0,0) — pin xoay để căn theo tường
+    // Cone chỉ ngang ra khỏi tường mạn (về phía camera)
+    const up = new THREE.Vector3(0, 1, 0);
+    const wallNorm = result.normal.clone().normalize();
+    // Căn pin: trục Y của pin = normal tường (pin nằm ngang, cone chỉ ra ngoài)
+    if (Math.abs(wallNorm.dot(up)) < 0.95) {
+      pinGroup.quaternion.copy(
+        new THREE.Quaternion().setFromUnitVectors(up, wallNorm),
+      );
+    }
+  } else {
+    const up = new THREE.Vector3(0, 1, 0);
+    const dot = result.normal.dot(up);
+    if (Math.abs(dot) < 0.95) {
+      const q = new THREE.Quaternion().setFromUnitVectors(up, result.normal);
+      pinGroup.quaternion.copy(q);
+    }
   }
+
   pinAnimT = 0;
   scene.add(pinGroup);
 }
@@ -915,6 +1091,7 @@ function closeInfoPanel() {
   infoPanel.style.transform = "translateX(380px)";
   activeZoneKey = null;
   removePin();
+  controls.maxPolarAngle = Math.PI * 0.54; // reset về bình thường
   LEGEND_ORDER.forEach((k) => {
     legendRows[k].style.background = "transparent";
     legendRows[k].style.borderLeft = "3px solid transparent";
@@ -982,10 +1159,14 @@ LEGEND_ORDER.forEach((key) => {
       closeInfoPanel();
       return;
     }
-    flyToZone(key);
+    // Thượng tầng: placePin trước để detect vị trí cabin, rồi mới fly
+    if (z.type === "exterior") {
+      placePin(key, meshes); // sets ZONES.thuong_tang._resolvedZFrac nếu cần
+    } else {
+      removePin();
+    }
+    flyToZone(key); // dùng _resolvedZFrac đã detect ở trên
     openInfoPanel(key);
-    if (z.type === "exterior") placePin(key, meshes);
-    else removePin(); // không cần pin cho interior
   });
   legend.appendChild(row);
   legendRows[key] = row;
@@ -1025,10 +1206,21 @@ function flyToZone(key) {
   const sz = shipBBox.getSize(new THREE.Vector3());
   const cen = shipBBox.getCenter(new THREE.Vector3());
   const ty = shipBBox.min.y + sz.y * z.viewRelY;
-  const look = new THREE.Vector3(cen.x, ty, cen.z);
+
+  // Thượng tầng: nhìn vào đúng đầu tàu có cabin (tự phát hiện qua placePin)
+  let lookZ = cen.z;
+  let az = z.viewAzimuth;
+  if (key === "thuong_tang") {
+    const frac = ZONES.thuong_tang._resolvedZFrac ?? 0.15;
+    lookZ = shipBBox.min.z + sz.z * frac;
+    // Camera nhìn từ mạn phải vào cabin: azimuth ≈ 0.22π (nhìn từ phía X+ Z+)
+    // Nếu cabin ở max.z (frac>0.5): camera đứng về phía Z+ → azimuth lớn hơn
+    az = frac > 0.5 ? Math.PI * 1.78 : Math.PI * 0.22;
+  }
+
+  const look = new THREE.Vector3(cen.x, ty, lookZ);
   const pol = z.viewPolar,
-    d = z.viewDist,
-    az = z.viewAzimuth;
+    d = z.viewDist;
   const pos = new THREE.Vector3(
     look.x + d * Math.sin(pol) * Math.sin(az),
     look.y + d * Math.cos(pol),
@@ -1038,6 +1230,8 @@ function flyToZone(key) {
   _sl.copy(controls.target);
   flyTarget = { pos, look };
   flyT = 0;
+  controls.maxPolarAngle =
+    pol > Math.PI * 0.55 ? Math.PI * 0.97 : Math.PI * 0.54;
 }
 function hexRgb(h) {
   return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(",");
@@ -1106,28 +1300,68 @@ function restoreMesh() {
   }
 }
 
+// ── Debounce & zone-lock để chống nhảy tooltip ──
+let hoverZoneKey = null; // zone đang hiển thị tooltip
+let hoverLockCount = 0; // số frame liên tiếp cùng zone
+let pendingZoneKey = null; // zone đang "ứng cử"
+let pendingCount = 0;
+const ZONE_LOCK_FRAMES = 4; // phải ổn định N frame mới đổi
+
 window.addEventListener("mousemove", (e) => {
   if (!meshes.length || !shipBBox) return;
   mouse.x = (e.clientX / innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
+
+  // Tăng far để bắt được đáy tàu khi nhìn từ dưới
+  raycaster.far = 200;
+
   const hits = raycaster.intersectObjects(meshes, false);
   if (!hits.length) {
     restoreMesh();
     hoverTip.style.display = "none";
     renderer.domElement.style.cursor = "grab";
+    hoverZoneKey = null;
+    hoverLockCount = 0;
+    pendingZoneKey = null;
+    pendingCount = 0;
     return;
   }
+
   const { object: mesh, point, face } = hits[0];
   if (!face) return;
   const zone = detectZone(mesh, point, face, shipBBox);
+  const key = Object.keys(ZONES).find((k) => ZONES[k] === zone) || "man_kho";
+
+  // ── Zone-lock logic: chỉ đổi tooltip khi zone ổn định N frame ──
+  if (key === hoverZoneKey) {
+    hoverLockCount++;
+    pendingZoneKey = null;
+    pendingCount = 0;
+  } else if (key === pendingZoneKey) {
+    pendingCount++;
+    if (pendingCount >= ZONE_LOCK_FRAMES) {
+      // Chấp nhận zone mới
+      restoreMesh();
+      hoverZoneKey = key;
+      hoverLockCount = 0;
+      pendingZoneKey = null;
+      pendingCount = 0;
+    }
+  } else {
+    pendingZoneKey = key;
+    pendingCount = 1;
+  }
+
+  // Highlight mesh theo zone đã lock (không theo pending)
+  const displayZone = ZONES[hoverZoneKey || key];
   if (mesh !== lastMesh) {
     restoreMesh();
     lastMesh = mesh;
     lastMat = mesh.material;
     mesh.material = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(zone.color),
-      emissive: new THREE.Color(zone.color),
+      color: new THREE.Color(displayZone.color),
+      emissive: new THREE.Color(displayZone.color),
       emissiveIntensity: 0.55,
       transparent: true,
       opacity: 0.9,
@@ -1135,9 +1369,12 @@ window.addEventListener("mousemove", (e) => {
       metalness: 0.1,
     });
   }
+
+  // Tooltip chỉ hiện zone đã lock
+  const tipZone = ZONES[hoverZoneKey || key];
   hoverTip.innerHTML = `<span style="display:inline-block;width:8px;height:8px;
-    background:${zone.color};border-radius:50%;margin-right:6px;
-    vertical-align:middle"></span>${zone.icon} ${zone.name}`;
+    background:${tipZone.color};border-radius:50%;margin-right:6px;
+    vertical-align:middle"></span>${tipZone.icon} ${tipZone.name}`;
   hoverTip.style.display = "block";
   const tw = hoverTip.offsetWidth + 10;
   hoverTip.style.left =
@@ -1150,6 +1387,10 @@ window.addEventListener("mousemove", (e) => {
 renderer.domElement.addEventListener("mouseleave", () => {
   restoreMesh();
   hoverTip.style.display = "none";
+  hoverZoneKey = null;
+  hoverLockCount = 0;
+  pendingZoneKey = null;
+  pendingCount = 0;
 });
 
 renderer.domElement.addEventListener("click", (e) => {
@@ -1180,15 +1421,24 @@ renderer.domElement.addEventListener("click", (e) => {
       scene.remove(pinGroup);
       pinGroup = null;
     }
-    pinGroup = buildPin(zone.color);
+    const cs = key === "day_tau" ? 3.5 : 1.0;
+    pinGroup = buildPin(zone.color, cs);
     pinGroup.position.copy(point);
-    _nm.getNormalMatrix(mesh.matrixWorld);
-    const wn = face.normal.clone().applyMatrix3(_nm).normalize();
-    const up = new THREE.Vector3(0, 1, 0);
-    if (Math.abs(wn.dot(up)) < 0.95) {
-      pinGroup.quaternion.copy(
-        new THREE.Quaternion().setFromUnitVectors(up, wn),
-      );
+
+    if (key === "day_tau") {
+      // Flip 180° + dịch: cone tip chạm đáy, stem+ball treo xuống camera
+      pinGroup.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
+      pinGroup.position.y -= 0.24 * cs;
+    } else {
+      // Căn theo normal bề mặt
+      _nm.getNormalMatrix(mesh.matrixWorld);
+      const wn = face.normal.clone().applyMatrix3(_nm).normalize();
+      const up = new THREE.Vector3(0, 1, 0);
+      if (Math.abs(wn.dot(up)) < 0.95) {
+        pinGroup.quaternion.copy(
+          new THREE.Quaternion().setFromUnitVectors(up, wn),
+        );
+      }
     }
     pinAnimT = 0;
     scene.add(pinGroup);
