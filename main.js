@@ -4,23 +4,13 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 // ═══════════════════════════════════════════════════════════
 // 1.  DỮ LIỆU VÙNG TÀU
-//
-//  type: "exterior" → dùng 3D pin trên bề mặt ngoài
-//        "interior" → dùng sơ đồ mặt cắt 2D
-//
-//  pinCast: hướng bắn tia để tìm bề mặt
-//    { from:"above"|"below"|"side_right"|"side_left"|"front"|"back",
-//      relY, relX, relZ }  (0..1 trong bbox)
 // ═══════════════════════════════════════════════════════════
 const ZONES = {
   day_tau: {
     name: "Đáy Tàu",
-    color: "#29b6f6",
-    icon: "⚓",
+    color: "#2196a8",
     type: "exterior",
     pinCast: { from: "below", relY: 0.01, relXFrac: 0.5, relZFrac: 0.5 },
-    // polar=2.1 → camera chui xuống dưới đáy tàu nhìn lên
-    // dist=18 gần hơn để pin to rõ hơn
     viewRelY: 0.02,
     viewDist: 18,
     viewAzimuth: Math.PI * 0.45,
@@ -41,13 +31,9 @@ const ZONES = {
   },
   man_uot: {
     name: "Mạn Ướt",
-    color: "#1565c0",
-    icon: "🌊",
+    color: "#1a5fa8",
     type: "exterior",
-    // relY: 0..1 (0=đáy, 1=đỉnh). Mạn ướt = vùng thấp, ngập nước ~ 15-30%
     pinCast: { from: "side_right", relY: 0.2, relXFrac: 1.0, relZFrac: 0.4 },
-    // Camera: polar=1.45 (gần ngang), azimuth=PI*0.75 (nhìn từ mạn trái-sau vào)
-    // → tàu nghiêng nhẹ, thấy rõ phần đỏ mạn ướt
     viewRelY: 0.2,
     viewDist: 24,
     viewAzimuth: Math.PI * 0.75,
@@ -67,10 +53,8 @@ const ZONES = {
   },
   man_kho: {
     name: "Mạn Khô",
-    color: "#c62828",
-    icon: "☀️",
+    color: "#b83232",
     type: "exterior",
-    // relY: Mạn khô = vùng giữa, không ngập nước ~ 35-50%
     pinCast: { from: "side_right", relY: 0.4, relXFrac: 1.0, relZFrac: 0.38 },
     viewRelY: 0.4,
     viewDist: 24,
@@ -90,9 +74,8 @@ const ZONES = {
     ],
   },
   mat_boong: {
-    name: "Mặt Boong, Lối Đi",
+    name: "Mặt Boong & Lối Đi",
     color: "#2e7d32",
-    icon: "🚶",
     type: "exterior",
     pinCast: { from: "above", relY: 0.62, relXFrac: 0.5, relZFrac: 0.3 },
     viewRelY: 0.6,
@@ -118,11 +101,8 @@ const ZONES = {
   },
   ham_hang: {
     name: "Hầm Hàng",
-    color: "#7b1fa2",
-    icon: "📦",
+    color: "#6a1fa2",
     type: "interior",
-    // interior → hiển thị sơ đồ mặt cắt, không dùng 3D pin
-    // Vùng highlight trong sơ đồ SVG (tỉ lệ 0..1 trong hình)
     diagramZone: { x: 0.12, y: 0.25, w: 0.76, h: 0.52 },
     viewRelY: 0.6,
     viewDist: 32,
@@ -148,8 +128,7 @@ const ZONES = {
   },
   he_thong_khung: {
     name: "Hệ Thống Khung Xương",
-    color: "#e65100",
-    icon: "🔩",
+    color: "#c45a00",
     type: "interior",
     diagramZone: { x: 0.04, y: 0.08, w: 0.92, h: 0.88 },
     viewRelY: 0.4,
@@ -171,18 +150,10 @@ const ZONES = {
     ],
   },
   thuong_tang: {
-    name: "Thượng Tầng / Cabin",
-    color: "#78909c",
-    icon: "🏠",
+    name: "Thượng Tầng & Cabin",
+    color: "#546e7a",
     type: "exterior",
-    // ── TUNING THƯỢNG TẦNG ──────────────────────────────────────
-    // from:"scan_cabin" → tự động quét 12 điểm Z tìm tường cabin
-    // Không cần sửa relZFrac (được tự tính)
-    // Nếu muốn sửa thủ công: đổi from:"side_right" và chỉnh relZFrac
-    //   relZFrac: 0..1 (0=đầu min.z, 1=đầu max.z)
-    //   relY: 0..1 (0=đáy, 1=đỉnh) — cabin ở khoảng 0.75-0.85
     pinCast: { from: "scan_cabin", relY: 0.78, relXFrac: 1.0, relZFrac: 0.5 },
-    // Camera: viewAzimuth sẽ được tự điều chỉnh theo vị trí cabin detect được
     viewRelY: 0.8,
     viewDist: 16,
     viewAzimuth: Math.PI * 0.22,
@@ -351,47 +322,22 @@ function zoneByName(n) {
 const _nm = new THREE.Matrix3(),
   _wn = new THREE.Vector3();
 
-// ── zoneByPhysics: phân loại vùng dựa trên normal + vị trí ────────────
-// ĐÃ TINH CHỈNH dựa trên tỉ lệ thực tế của tàu hàng bulk carrier:
-//
-//  relY (chiều cao tương đối 0..1):
-//   0.00 - 0.13 → Đáy tàu
-//   0.13 - 0.30 → Mạn Ướt  (ngập nước khi đầy tải)
-//   0.30 - 0.58 → Mạn Khô  (trên đường nước)
-//   0.58 - 0.76 → Mặt Boong / Lối Đi
-//   0.76 - 1.00 → Thượng Tầng / Cabin
-//
-//  Bề mặt nằm ngang (ny > 0.55) luôn là Boong hoặc Hầm hàng
-//  Bề mặt mặt dưới (ny < -0.50) luôn là Đáy hoặc Khung xương
-//
 function zoneByPhysics(wn, relY, relX) {
   const ny = wn.y,
     nx = Math.abs(wn.x),
     nz = Math.abs(wn.z);
-
-  // Bề mặt NẰM NGANG hướng lên (boong, nắp hầm, mái cabin)
   if (ny > 0.55) {
     if (relY < 0.12) return ZONES.day_tau;
-    // Trung tâm + cao = hầm hàng (nắp hatch)
     if (relY > 0.55 && relX < 0.6) return ZONES.ham_hang;
     return ZONES.mat_boong;
   }
-
-  // Bề mặt NẰM NGANG hướng xuống (đáy tàu, sườn ngang)
   if (ny < -0.5) {
     if (relY < 0.14) return ZONES.day_tau;
     return ZONES.he_thong_khung;
   }
-
-  // Bề mặt THẲNG ĐỨNG / NGHIÊNG (mạn tàu, tường cabin, hầm)
-  // Ưu tiên: nếu normal có thành phần Y đáng kể = mặt nghiêng → boong
   if (ny > 0.3 && relY > 0.5) return ZONES.mat_boong;
-
-  // Tường thẳng đứng tại vùng cao + giữa tàu = hầm hàng
   if (relY > 0.56 && relX < 0.65 && (nx > 0.25 || nz > 0.25))
     return ZONES.ham_hang;
-
-  // Phân loại theo chiều cao
   if (relY > 0.76) return ZONES.thuong_tang;
   if (relY < 0.13) return ZONES.day_tau;
   if (relY < 0.3) return ZONES.man_uot;
@@ -400,29 +346,19 @@ function zoneByPhysics(wn, relY, relX) {
   return ZONES.thuong_tang;
 }
 
-// ── detectZone: nhận diện vùng với MULTI-SAMPLE VOTING ────────────────
-// Thay vì dùng 1 điểm duy nhất (dễ sai ở ranh giới), lấy mẫu thêm
-// 4 điểm lân cận rồi bỏ phiếu → kết quả ổn định hơn nhiều
-//
 const _voteRC = new THREE.Raycaster();
 
 function detectZone(mesh, point, face, bbox) {
-  // Ưu tiên tuyệt đối: tên mesh khớp từ khóa
   const byName = zoneByName(mesh.name);
   if (byName) return byName;
   if (!bbox || !face) return ZONES.man_kho;
-
   const sz = bbox.getSize(new THREE.Vector3());
   const relY = Math.max(0, Math.min(1, (point.y - bbox.min.y) / sz.y));
   const relX =
     Math.abs(point.x - (bbox.min.x + sz.x * 0.5)) / (sz.x * 0.5 + 0.001);
   _nm.getNormalMatrix(mesh.matrixWorld);
   _wn.copy(face.normal).applyMatrix3(_nm).normalize();
-
   const primary = zoneByPhysics(_wn, relY, relX);
-
-  // ── VOTE: kiểm tra 4 điểm lân cận nhỏ (+/-0.15 units theo normal) ──
-  // Nếu đa số đồng ý với primary → dùng primary (tránh nhảy ở ranh giới)
   const OFFSET = 0.18;
   const neighbors = [
     new THREE.Vector3(OFFSET, 0, 0),
@@ -430,15 +366,13 @@ function detectZone(mesh, point, face, bbox) {
     new THREE.Vector3(0, OFFSET, 0),
     new THREE.Vector3(0, -OFFSET, 0),
   ];
-
-  let votes = {}; // zoneKey → count
+  let votes = {};
   const addVote = (z) => {
     const k = Object.keys(ZONES).find((k) => ZONES[k] === z) || "man_kho";
     votes[k] = (votes[k] || 0) + 1;
   };
   addVote(primary);
-  addVote(primary); // primary có trọng số 2
-
+  addVote(primary);
   for (const off of neighbors) {
     const samplePt = point.clone().add(off);
     const relYs = Math.max(0, Math.min(1, (samplePt.y - bbox.min.y) / sz.y));
@@ -446,8 +380,6 @@ function detectZone(mesh, point, face, bbox) {
       Math.abs(samplePt.x - (bbox.min.x + sz.x * 0.5)) / (sz.x * 0.5 + 0.001);
     addVote(zoneByPhysics(_wn, relYs, relXs));
   }
-
-  // Tìm zone nhiều phiếu nhất
   let winner = "man_kho",
     maxV = 0;
   for (const [k, v] of Object.entries(votes)) {
@@ -462,8 +394,13 @@ function detectZone(mesh, point, face, bbox) {
 // ═══════════════════════════════════════════════════════════
 // 3.  SCENE / CAMERA / RENDERER
 // ═══════════════════════════════════════════════════════════
+const HEADER_H = 50,
+  BRAND_H = 44;
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x111927);
+scene.background = new THREE.Color(0xdde3ea);
+// Subtle fog for depth
+scene.fog = new THREE.Fog(0xdde3ea, 80, 200);
+
 const camera = new THREE.PerspectiveCamera(
   45,
   innerWidth / innerHeight,
@@ -471,14 +408,20 @@ const camera = new THREE.PerspectiveCamera(
   600,
 );
 camera.position.set(28, 14, 34);
+
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(devicePixelRatio);
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+renderer.toneMappingExposure = 1.05;
 document.body.appendChild(renderer.domElement);
+
+// Offset canvas for header
+renderer.domElement.style.position = "fixed";
+renderer.domElement.style.top = "0";
+renderer.domElement.style.left = "0";
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -490,8 +433,8 @@ controls.maxPolarAngle = Math.PI * 0.54;
 // ═══════════════════════════════════════════════════════════
 // 4.  ÁNH SÁNG
 // ═══════════════════════════════════════════════════════════
-scene.add(new THREE.AmbientLight(0xfff0dd, 0.9));
-const sun = new THREE.DirectionalLight(0xfff8e8, 1.8);
+scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+const sun = new THREE.DirectionalLight(0xfff8f0, 2.0);
 sun.position.set(35, 55, 25);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
@@ -503,106 +446,195 @@ Object.assign(sun.shadow.camera, {
   far: 160,
 });
 scene.add(sun);
-const fill = new THREE.DirectionalLight(0x8ab4cc, 0.5);
+const fill = new THREE.DirectionalLight(0xc8d8e8, 0.6);
 fill.position.set(-20, 10, -15);
 scene.add(fill);
-scene.add(new THREE.HemisphereLight(0x99ccff, 0x334455, 0.4));
+scene.add(new THREE.HemisphereLight(0xe8f0ff, 0x8899aa, 0.5));
 
 // ═══════════════════════════════════════════════════════════
-// 5.  PIN 3D — CHỈ DÙNG CHO VÙNG NGOÀI
+// 5.  PIN 3D — Precision Targeting Reticle
+//     + Pulse wave rings lan toả từ gốc
+//     + Bob lên xuống có easing bounce
 // ═══════════════════════════════════════════════════════════
-let pinGroup = null,
-  pinAnimT = 0;
+let pinGroup = null;
+let pinElapsed = 0;
 const _castRC = new THREE.Raycaster();
+const PULSE_COUNT = 3; // số vòng sóng đồng tâm
+const PULSE_PERIOD = 1.8; // giây / chu kỳ 1 vòng sóng
+const PULSE_MAX_R = 1.4; // bán kính tối đa (× s)
+const BOB_AMP = 0.22; // biên độ lên xuống (units)
+const BOB_FREQ = 1.9; // tần số (rad/s)
 
 function buildPin(color, s = 1.0) {
   const grp = new THREE.Group();
   const col = new THREE.Color(color);
-  const stem = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.035 * s, 0.035 * s, 1.2 * s, 8),
-    new THREE.MeshStandardMaterial({
-      color: col,
-      emissive: col,
-      emissiveIntensity: 0.7,
-      roughness: 0.2,
-    }),
+
+  const matBody = new THREE.MeshStandardMaterial({
+    color: col,
+    roughness: 0.15,
+    metalness: 0.68,
+    emissive: col,
+    emissiveIntensity: 0.12,
+  });
+  const matHead = new THREE.MeshStandardMaterial({
+    color: col,
+    roughness: 0.06,
+    metalness: 0.52,
+    emissive: col,
+    emissiveIntensity: 0.58,
+  });
+  const matOrbit = new THREE.MeshStandardMaterial({
+    color: col,
+    roughness: 0.08,
+    metalness: 0.82,
+    emissive: col,
+    emissiveIntensity: 0.28,
+  });
+
+  // ── 1. NEEDLE ─────────────────────────────────────────────
+  const needle = new THREE.Mesh(
+    new THREE.ConeGeometry(0.032 * s, 0.42 * s, 14),
+    matBody,
   );
-  stem.position.y = 0.6 * s;
-  grp.add(stem);
-  const cone = new THREE.Mesh(
-    new THREE.ConeGeometry(0.2 * s, 0.4 * s, 12),
-    new THREE.MeshStandardMaterial({
-      color: col,
-      emissive: col,
-      emissiveIntensity: 0.8,
-      roughness: 0.15,
-    }),
+  needle.rotation.z = Math.PI;
+  needle.position.y = 0.21 * s;
+  grp.add(needle);
+
+  // ── 2. ROD ────────────────────────────────────────────────
+  const rod = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.024 * s, 0.038 * s, 1.2 * s, 12),
+    matBody,
   );
-  cone.rotation.z = Math.PI;
-  cone.position.y = -0.04 * s;
-  grp.add(cone);
-  const ball = new THREE.Mesh(
-    new THREE.SphereGeometry(0.16 * s, 14, 14),
-    new THREE.MeshStandardMaterial({
-      color: col,
-      emissive: col,
-      emissiveIntensity: 0.9,
-      roughness: 0.1,
-      metalness: 0.3,
-    }),
+  rod.position.y = (0.42 + 0.6) * s;
+  grp.add(rod);
+
+  // ── 3. COLLAR ─────────────────────────────────────────────
+  const collar = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.08 * s, 0.024 * s, 0.14 * s, 20),
+    matBody,
   );
-  ball.position.y = 1.24 * s;
-  grp.add(ball);
-  // Pulse rings
-  for (let i = 0; i < 2; i++) {
-    const r = new THREE.Mesh(
-      new THREE.RingGeometry(0.25 * s, 0.38 * s, 32),
-      new THREE.MeshBasicMaterial({
-        color: col,
-        transparent: true,
-        opacity: 0.7,
-        side: THREE.DoubleSide,
-      }),
+  collar.position.y = 1.29 * s;
+  grp.add(collar);
+
+  // ── 4. HEAD DISC ──────────────────────────────────────────
+  const HEAD_Y = 1.42 * s;
+  const disc = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.2 * s, 0.08 * s, 0.048 * s, 32),
+    matHead,
+  );
+  disc.position.y = HEAD_Y;
+  grp.add(disc);
+
+  const discRim = new THREE.Mesh(
+    new THREE.TorusGeometry(0.2 * s, 0.01 * s, 8, 48),
+    matOrbit,
+  );
+  discRim.position.y = HEAD_Y - 0.024 * s;
+  discRim.rotation.x = Math.PI / 2;
+  grp.add(discRim);
+
+  // ── 5. CENTER JEWEL ───────────────────────────────────────
+  const jewel = new THREE.Mesh(
+    new THREE.SphereGeometry(0.055 * s, 16, 16),
+    matHead,
+  );
+  jewel.position.y = HEAD_Y + 0.048 * s;
+  grp.add(jewel);
+
+  // ── 6. CROSSHAIR ARMS ─────────────────────────────────────
+  const armMat = new THREE.MeshStandardMaterial({
+    color: col,
+    roughness: 0.18,
+    metalness: 0.72,
+    emissive: col,
+    emissiveIntensity: 0.2,
+  });
+  const ARM_LEN = 0.48 * s;
+  [0, Math.PI / 2].forEach((ry) => {
+    const arm = new THREE.Mesh(
+      new THREE.BoxGeometry(ARM_LEN, 0.012 * s, 0.016 * s),
+      armMat,
     );
-    r.rotation.x = -Math.PI / 2;
-    r.position.y = 0.01;
-    r.userData.isPulse = true;
-    r.userData.phase = i * Math.PI;
-    grp.add(r);
-  }
-  const base = new THREE.Mesh(
-    new THREE.RingGeometry(0.15 * s, 0.26 * s, 32),
-    new THREE.MeshBasicMaterial({
+    arm.position.y = HEAD_Y + 0.032 * s;
+    arm.rotation.y = ry;
+    grp.add(arm);
+    [1, -1].forEach((side) => {
+      const tick = new THREE.Mesh(
+        new THREE.BoxGeometry(0.012 * s, 0.028 * s, 0.016 * s),
+        armMat,
+      );
+      tick.position.y = HEAD_Y + 0.032 * s;
+      const offset = side * (ARM_LEN / 2 - 0.005 * s);
+      tick.position.x += Math.cos(ry) * offset;
+      tick.position.z += Math.sin(ry) * offset;
+      grp.add(tick);
+    });
+  });
+
+  // ── 7. ORBIT RING A ───────────────────────────────────────
+  const orbitA = new THREE.Group();
+  orbitA.position.y = HEAD_Y;
+  orbitA.rotation.z = THREE.MathUtils.degToRad(38);
+  orbitA.userData.spinY = 0.48;
+  orbitA.add(
+    new THREE.Mesh(
+      new THREE.TorusGeometry(0.36 * s, 0.011 * s, 8, 60),
+      matOrbit,
+    ),
+  );
+  grp.add(orbitA);
+
+  // ── 8. ORBIT RING B ───────────────────────────────────────
+  const orbitB = new THREE.Group();
+  orbitB.position.y = HEAD_Y;
+  orbitB.rotation.z = THREE.MathUtils.degToRad(128);
+  orbitB.userData.spinY = -0.32;
+  orbitB.add(
+    new THREE.Mesh(
+      new THREE.TorusGeometry(0.36 * s, 0.009 * s, 8, 60),
+      matOrbit,
+    ),
+  );
+  grp.add(orbitB);
+
+  // ── 9. PULSE WAVE RINGS — 3 vòng sóng lan toả từ gốc ─────
+  //    Mỗi vòng là RingGeometry nằm ngang (y≈0), clone material riêng
+  //    để opacity có thể animate độc lập.
+  //    phase offset = i / PULSE_COUNT × PULSE_PERIOD → stagger đều
+  const pulseRings = [];
+  for (let i = 0; i < PULSE_COUNT; i++) {
+    const pMat = new THREE.MeshBasicMaterial({
       color: col,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0,
       side: THREE.DoubleSide,
-    }),
-  );
-  base.rotation.x = -Math.PI / 2;
-  base.position.y = 0.01;
-  grp.add(base);
+      depthWrite: false,
+    });
+    // Dùng RingGeometry placeholder r=1 → scale trong loop
+    const pMesh = new THREE.Mesh(new THREE.RingGeometry(0.88, 1.0, 48), pMat);
+    pMesh.rotation.x = -Math.PI / 2;
+    pMesh.position.y = 0.015 * s;
+    pMesh.userData.phase = (i / PULSE_COUNT) * PULSE_PERIOD;
+    pMesh.userData.pScale = s;
+    grp.add(pMesh);
+    pulseRings.push(pMesh);
+  }
+
+  // ── 10. POINT LIGHT ───────────────────────────────────────
+  const glow = new THREE.PointLight(col, 1.1, 3.5 * s, 1.7);
+  glow.position.y = HEAD_Y;
+  grp.add(glow);
+
+  // Lưu refs
+  grp.userData.orbitA = orbitA;
+  grp.userData.orbitB = orbitB;
+  grp.userData.pulseRings = pulseRings;
+  grp.userData.headY = HEAD_Y;
+  grp.userData.glowLight = glow;
+
   return grp;
 }
 
-/**
- * ═══════════════════════════════════════════════════════
- *  castToSurface — bắn tia tìm điểm trên bề mặt tàu
- *
- *  cfg.from:
- *   "above"      → từ trên xuống
- *   "below"      → từ dưới lên
- *   "side_right" → từ mạn phải (X+) vào
- *   "side_left"  → từ mạn trái (X-) vào
- *   "front"      → từ mũi (Z-) vào
- *   "back"       → từ đuôi (Z+) vào
- *   "scan_cabin" → quét 12 điểm Z để tìm tường cabin
- *
- *  cfg.relY    = 0..1  (chiều cao tương đối trong bbox)
- *  cfg.relXFrac= 0..1  (X tương đối)
- *  cfg.relZFrac= 0..1  (Z tương đối)
- * ═══════════════════════════════════════════════════════
- */
 function castToSurface(cfg, bbox, meshList) {
   const sz = bbox.getSize(new THREE.Vector3());
   const min = bbox.min,
@@ -610,17 +642,13 @@ function castToSurface(cfg, bbox, meshList) {
   const cx = (min.x + max.x) * 0.5;
   const MARGIN = 5;
 
-  // ── SCAN_CABIN: quét 12 điểm Z từ side_right ──────────
-  // Cabin = cấu trúc có diện tích RỘNG nhất ở độ cao cao (relY 0.72-0.88)
-  // → tìm nhóm Z liên tiếp có hit side_right tại độ cao đó
   if (cfg.from === "scan_cabin") {
-    const cabinRelY = 0.78; // độ cao quét (cabin cao hơn boong)
+    const cabinRelY = 0.78;
     const ty = min.y + sz.y * cabinRelY;
     const STEPS = 12;
     const hits12 = [];
-
     for (let i = 0; i < STEPS; i++) {
-      const frac = 0.05 + (i / (STEPS - 1)) * 0.9; // 0.05 → 0.95
+      const frac = 0.05 + (i / (STEPS - 1)) * 0.9;
       const tz = min.z + sz.z * frac;
       const org = new THREE.Vector3(max.x + MARGIN, ty, tz);
       const dir = new THREE.Vector3(-1, 0, 0);
@@ -629,8 +657,6 @@ function castToSurface(cfg, bbox, meshList) {
       const h = _castRC.intersectObjects(meshList, false);
       hits12.push(h.length > 0 ? { frac, point: h[0].point.clone() } : null);
     }
-
-    // Tìm nhóm liên tiếp dài nhất có hit (= tường cabin, rộng hơn cột cẩu)
     let bestGroup = [],
       curGroup = [];
     for (const h of hits12) {
@@ -639,28 +665,22 @@ function castToSurface(cfg, bbox, meshList) {
         if (curGroup.length > bestGroup.length) bestGroup = [...curGroup];
       } else curGroup = [];
     }
-
     if (bestGroup.length) {
-      // Lấy điểm giữa nhóm dài nhất
       const mid = bestGroup[Math.floor(bestGroup.length / 2)];
-      // Lưu lại ZFrac để flyToZone dùng
       ZONES.thuong_tang._resolvedZFrac = mid.frac;
       return { point: mid.point.clone(), normal: new THREE.Vector3(1, 0, 0) };
     }
-    // Fallback: giữa tàu
     ZONES.thuong_tang._resolvedZFrac = 0.5;
     return {
-      point: new THREE.Vector3(cx, ty, min.z + sz.z * 0.5),
+      point: new THREE.Vector3(cx, min.y + sz.y * 0.78, min.z + sz.z * 0.5),
       normal: new THREE.Vector3(1, 0, 0),
     };
   }
 
-  // ── Các mode thông thường ──────────────────────────────
   const tx = min.x + sz.x * cfg.relXFrac;
   const ty = min.y + sz.y * cfg.relY;
   const tz = min.z + sz.z * cfg.relZFrac;
   let origin, dir;
-
   switch (cfg.from) {
     case "above":
       origin = new THREE.Vector3(tx, max.y + MARGIN, tz);
@@ -690,13 +710,10 @@ function castToSurface(cfg, bbox, meshList) {
       origin = new THREE.Vector3(cx, max.y + MARGIN, min.z + sz.z * 0.5);
       dir = new THREE.Vector3(0, -1, 0);
   }
-
   _castRC.set(origin, dir.normalize());
   _castRC.far = sz.y * 3 + MARGIN * 2;
   const hits = _castRC.intersectObjects(meshList, false);
-
   if (hits.length) {
-    // "below" và "above": hit đầu tiên là bề mặt ngoài cùng
     const best =
       cfg.from === "below" || cfg.from === "above"
         ? hits[0]
@@ -725,13 +742,12 @@ function placePin(key, meshList) {
   }
   const z = ZONES[key];
   if (z.type !== "exterior" || !shipBBox || !z.pinCast) return;
-
   const s = key === "day_tau" ? 3.5 : 1.0;
   const result = castToSurface(z.pinCast, shipBBox, meshList);
-
   pinGroup = buildPin(z.color, s);
   pinGroup.position.copy(result.point);
-
+  pinGroup.userData.baseY = result.point.y; // lưu cho bob animation
+  pinElapsed = 0;
   if (key === "day_tau") {
     pinGroup.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
     pinGroup.position.y -= 0.24 * s;
@@ -751,121 +767,130 @@ function placePin(key, meshList) {
       pinGroup.quaternion.copy(q);
     }
   }
-  pinAnimT = 0;
   scene.add(pinGroup);
 }
 
 function removePin() {
-  /* PIN đã tắt — hàm giữ lại để tránh lỗi tham chiếu */
+  if (pinGroup) {
+    scene.remove(pinGroup);
+    // Dọn dẹp geometry & material để tránh memory leak
+    pinGroup.traverse((c) => {
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) {
+        if (Array.isArray(c.material)) c.material.forEach((m) => m.dispose());
+        else c.material.dispose();
+      }
+    });
+    pinGroup = null;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
-// 7.  HOVER TOOLTIP
+// 6.  TOOLTIP (ẩn)
 // ═══════════════════════════════════════════════════════════
-// Tooltip hover đã bị tắt (nhận diện zone khi hover không đủ chính xác)
-// Dùng CLICK hoặc LEGEND để xem thông tin zone
-const hoverTip = document.getElementById("tooltip");
-hoverTip.style.display = "none"; // luôn ẩn
+document.getElementById("tooltip").style.display = "none";
 
 // ═══════════════════════════════════════════════════════════
-// 8.  INFO PANEL
+// 7.  INFO PANEL — thiết kế lại chuyên nghiệp
 // ═══════════════════════════════════════════════════════════
 const infoPanel = document.createElement("div");
 Object.assign(infoPanel.style, {
   position: "fixed",
-  top: "16px",
+  top: HEADER_H + 12 + "px",
   right: "16px",
-  width: "340px",
-  maxHeight: "calc(100vh - 32px)",
+  width: "320px",
+  maxHeight: `calc(100vh - ${HEADER_H + BRAND_H + 24}px)`,
   overflowY: "auto",
-  background: "rgba(5,12,26,0.97)",
-  backdropFilter: "blur(16px)",
-  border: "1px solid rgba(100,170,255,0.22)",
-  borderRadius: "14px",
-  boxShadow: "0 12px 40px rgba(0,0,0,0.7)",
+  background: "#ffffff",
+  border: "1px solid rgba(12,30,53,0.10)",
+  borderTop: "3px solid #0c1e35",
+  borderRadius: "0 0 8px 8px",
+  boxShadow: "0 8px 32px rgba(12,30,53,0.16)",
   zIndex: "999",
-  transform: "translateX(380px)",
-  transition: "transform .38s cubic-bezier(.4,0,.2,1)",
-  color: "#f0f4ff",
+  transform: "translateX(360px)",
+  transition: "transform .32s cubic-bezier(.4,0,.2,1)",
+  color: "#1a2b3c",
   fontSize: "13px",
   lineHeight: "1.65",
+  fontFamily: "'DM Sans', sans-serif",
 });
 document.body.appendChild(infoPanel);
 let activeZoneKey = null;
 
+const DIAGRAM_IMAGES = {
+  ham_hang: "./images/ham-hang.png",
+  he_thong_khung: "./images/khung-xuong-tau.png",
+};
+
+function hexRgb(h) {
+  return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(",");
+}
+
 function openInfoPanel(key) {
   const z = ZONES[key];
   activeZoneKey = key;
+
+  // Highlight legend row
   LEGEND_ORDER.forEach((k) => {
-    legendRows[k].style.background =
-      k === key ? `rgba(${hexRgb(ZONES[k].color)},0.22)` : "transparent";
-    legendRows[k].style.borderLeft =
+    const row = legendRows[k];
+    row.style.background =
+      k === key ? `rgba(${hexRgb(ZONES[k].color)},0.10)` : "transparent";
+    row.style.borderLeft =
       k === key ? `3px solid ${ZONES[k].color}` : "3px solid transparent";
+    row.querySelector(".legend-name").style.fontWeight =
+      k === key ? "600" : "400";
   });
 
-  // Ảnh thực tế thay thế sơ đồ SVG
-  const DIAGRAM_IMAGES = {
-    ham_hang: "./images/ham-hang.png",
-    he_thong_khung: "./images/khung-xuong-tau.png",
-  };
+  const typeLabel =
+    z.type === "interior" ? "Khu vực bên trong" : "Khu vực bề mặt ngoài";
+  const typeDot = z.type === "interior" ? "▪" : "◆";
 
   const diagramHTML =
     z.type === "interior"
-      ? `
-    <div style="padding:14px 20px 4px;border-bottom:1px solid rgba(100,170,255,.12)">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.7px;
-        color:#7ec8e3;margin-bottom:10px">🖼 HÌNH ẢNH MINH HỌA</div>
-      <div style="border-radius:10px;overflow:hidden;
-        border:1px solid rgba(100,170,255,.20);background:#0a1020">
-        <img src="${DIAGRAM_IMAGES[key]}"
-          alt="${z.name}"
-          style="width:100%;display:block;object-fit:cover;
-            max-height:200px;opacity:0.93" />
-      </div>
-    </div>`
+      ? `<div style="padding:14px 18px 4px;border-bottom:1px solid #eee">
+        <div style="font-size:10px;font-weight:600;letter-spacing:1.2px;color:#8599aa;text-transform:uppercase;margin-bottom:8px">Hình ảnh minh họa</div>
+        <div style="border-radius:6px;overflow:hidden;border:1px solid #e8ecf0">
+          <img src="${DIAGRAM_IMAGES[key]}" alt="${z.name}" style="width:100%;display:block;object-fit:cover;max-height:180px" />
+        </div>
+       </div>`
       : "";
 
   infoPanel.innerHTML = `
-    <div style="background:linear-gradient(135deg,${z.color}55,${z.color}18);
-      padding:18px 20px 14px;border-radius:14px 14px 0 0;
-      border-bottom:1px solid rgba(100,170,255,.12);position:relative">
-      <button id="closePanel" style="position:absolute;top:12px;right:14px;
-        background:rgba(255,255,255,.1);border:none;color:#99aacc;
-        width:26px;height:26px;border-radius:50%;cursor:pointer;
-        font-size:14px;line-height:26px;text-align:center;transition:background .15s"
-        onmouseover="this.style.background='rgba(255,255,255,.2)'"
-        onmouseout="this.style.background='rgba(255,255,255,.1)'">✕</button>
-      <div style="font-size:28px;margin-bottom:6px">${z.icon}</div>
-      <div style="font-size:18px;font-weight:700;color:#fff">${z.name}</div>
-      <div style="margin-top:5px;display:flex;align-items:center;gap:6px">
-        <span style="width:8px;height:8px;background:${z.color};
-          border-radius:50%;display:inline-block"></span>
-        <span style="font-size:11px;color:#8899bb;letter-spacing:.5px">
-          ${z.type === "interior" ? "KHU VỰC BÊN TRONG" : "KHU VỰC BỀ MẶT NGOÀI"}
-        </span>
+    <div style="padding:16px 18px 14px;border-bottom:1px solid #eef0f3;position:relative">
+      <button id="closePanel" style="position:absolute;top:14px;right:14px;
+        background:none;border:1px solid #d4d8df;color:#8599aa;
+        width:24px;height:24px;border-radius:4px;cursor:pointer;
+        font-size:12px;line-height:22px;text-align:center;
+        transition:all .15s;font-family:inherit"
+        onmouseover="this.style.background='#f0f2f5';this.style.color='#0c1e35'"
+        onmouseout="this.style.background='none';this.style.color='#8599aa'">✕</button>
+
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="width:12px;height:12px;background:${z.color};border-radius:2px;display:inline-block;flex-shrink:0"></span>
+        <span style="font-size:10px;font-weight:600;letter-spacing:1px;color:#8599aa;text-transform:uppercase">${typeDot} ${typeLabel}</span>
       </div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#0c1e35;line-height:1.2">${z.name}</div>
     </div>
+
     ${diagramHTML}
-    <div style="padding:14px 20px;color:#b0c8e0;font-size:12.5px;
-      line-height:1.78;border-bottom:1px solid rgba(100,170,255,.10)">
+
+    <div style="padding:14px 18px;color:#4a6070;font-size:12.5px;line-height:1.8;border-bottom:1px solid #eef0f3">
       ${z.description}
     </div>
-    <div style="padding:14px 20px 18px">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.8px;
-        color:#7ec8e3;margin-bottom:12px">🎨 DÒNG SƠN ĐỀ NGHỊ</div>
+
+    <div style="padding:14px 18px 18px">
+      <div style="font-size:10px;font-weight:600;letter-spacing:1.2px;color:#8599aa;text-transform:uppercase;margin-bottom:12px">Dòng sơn đề nghị</div>
       ${z.paints
         .map(
           (p, i) => `
-        <div style="display:flex;gap:11px;margin-bottom:9px;
-          background:rgba(255,255,255,.04);padding:10px 12px;
-          border-radius:8px;border-left:3px solid ${z.color}">
-          <div style="flex-shrink:0;width:22px;height:22px;background:${z.color};
-            border-radius:50%;display:flex;align-items:center;justify-content:center;
-            font-size:11px;font-weight:700;color:#fff;margin-top:2px">${i + 1}</div>
+        <div style="display:flex;gap:12px;margin-bottom:8px;padding:10px 12px;
+          background:#f7f9fb;border-radius:6px;border-left:3px solid ${z.color}">
+          <div style="flex-shrink:0;width:20px;height:20px;background:${z.color};
+            border-radius:3px;display:flex;align-items:center;justify-content:center;
+            font-size:10px;font-weight:700;color:#fff;margin-top:2px">${i + 1}</div>
           <div>
-            <div style="font-weight:700;color:#f0e080;font-size:13px;
-              margin-bottom:3px">${p.name}</div>
-            <div style="color:#8aaac4;font-size:11.5px">${p.desc}</div>
+            <div style="font-weight:600;color:#0c1e35;font-size:13px;margin-bottom:3px">${p.name}</div>
+            <div style="color:#8599aa;font-size:11.5px">${p.desc}</div>
           </div>
         </div>`,
         )
@@ -879,38 +904,53 @@ function openInfoPanel(key) {
 }
 
 function closeInfoPanel() {
-  infoPanel.style.transform = "translateX(380px)";
+  infoPanel.style.transform = "translateX(360px)";
   activeZoneKey = null;
   removePin();
-  controls.maxPolarAngle = Math.PI * 0.54; // reset về bình thường
+  controls.maxPolarAngle = Math.PI * 0.54;
   LEGEND_ORDER.forEach((k) => {
     legendRows[k].style.background = "transparent";
     legendRows[k].style.borderLeft = "3px solid transparent";
+    legendRows[k].querySelector(".legend-name").style.fontWeight = "400";
   });
 }
 
 // ═══════════════════════════════════════════════════════════
-// 9.  LEGEND
+// 8.  LEGEND — thiết kế lại
 // ═══════════════════════════════════════════════════════════
 const legend = document.createElement("div");
 Object.assign(legend.style, {
   position: "fixed",
-  top: "16px",
+  top: HEADER_H + 12 + "px",
   left: "16px",
-  background: "rgba(5,12,26,0.92)",
-  color: "#e8f0fe",
-  padding: "14px 16px",
-  borderRadius: "12px",
-  fontSize: "12px",
-  lineHeight: "1.5",
-  backdropFilter: "blur(12px)",
-  border: "1px solid rgba(100,170,255,.2)",
+  background: "#ffffff",
+  color: "#1a2b3c",
+  borderRadius: "0 0 8px 8px",
+  border: "1px solid rgba(12,30,53,0.10)",
+  borderTop: "3px solid #0c1e35",
+  boxShadow: "0 8px 32px rgba(12,30,53,0.12)",
   zIndex: "999",
   userSelect: "none",
-  minWidth: "205px",
+  minWidth: "220px",
+  overflow: "hidden",
+  fontFamily: "'DM Sans', sans-serif",
 });
-legend.innerHTML = `<strong style="font-size:13px;color:#7ec8e3;
-  display:block;margin-bottom:10px">🚢 Bản đồ vị trí tàu</strong>`;
+
+// Legend header
+const legendHeader = document.createElement("div");
+Object.assign(legendHeader.style, {
+  padding: "12px 16px 10px",
+  borderBottom: "1px solid #eef0f3",
+  background: "#fafbfc",
+});
+legendHeader.innerHTML = `
+  <div style="font-size:10px;font-weight:600;letter-spacing:1.4px;color:#8599aa;text-transform:uppercase;margin-bottom:2px">Bản đồ vùng</div>
+  <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:700;color:#0c1e35">Vị Trí Tàu Biển</div>`;
+legend.appendChild(legendHeader);
+
+// Legend body
+const legendBody = document.createElement("div");
+Object.assign(legendBody.style, { padding: "8px 0" });
 
 const legendRows = {};
 LEGEND_ORDER.forEach((key) => {
@@ -919,28 +959,27 @@ LEGEND_ORDER.forEach((key) => {
   Object.assign(row.style, {
     display: "flex",
     alignItems: "center",
-    gap: "9px",
-    padding: "6px 8px",
-    borderRadius: "7px",
+    gap: "10px",
+    padding: "8px 16px",
     cursor: "pointer",
-    marginBottom: "2px",
-    transition: "background .15s",
+    transition: "background .12s",
     borderLeft: "3px solid transparent",
   });
-  // Badge: exterior = pin icon, interior = image icon
-  const badge =
+
+  const typeIndicator =
     z.type === "interior"
-      ? `<span style="font-size:9px;background:rgba(255,255,255,.1);
-        color:#88aabb;padding:1px 4px;border-radius:3px;margin-left:auto">🖼</span>`
-      : `<span style="font-size:9px;background:rgba(255,255,255,.1);
-        color:#88aabb;padding:1px 4px;border-radius:3px;margin-left:auto">🔍</span>`;
+      ? `<span style="font-size:9px;font-weight:600;letter-spacing:.6px;color:#8599aa;
+        background:#f0f2f5;padding:1px 5px;border-radius:3px;margin-left:auto;white-space:nowrap;flex-shrink:0">Nội thất</span>`
+      : `<span style="font-size:9px;font-weight:600;letter-spacing:.6px;color:#8599aa;
+        background:#f0f2f5;padding:1px 5px;border-radius:3px;margin-left:auto;white-space:nowrap;flex-shrink:0">Ngoại thất</span>`;
+
   row.innerHTML = `
-    <span style="flex-shrink:0;width:11px;height:11px;background:${z.color};
-      border-radius:2px;border:1px solid rgba(255,255,255,.3)"></span>
-    <span style="flex:1">${z.icon} ${z.name}</span>
-    ${badge}`;
+    <span style="flex-shrink:0;width:10px;height:10px;background:${z.color};border-radius:2px"></span>
+    <span class="legend-name" style="font-size:12.5px;flex:1;color:#1a2b3c;font-weight:400">${z.name}</span>
+    ${typeIndicator}`;
+
   row.addEventListener("mouseenter", () => {
-    if (activeZoneKey !== key) row.style.background = "rgba(100,170,255,.1)";
+    if (activeZoneKey !== key) row.style.background = "#f7f9fb";
   });
   row.addEventListener("mouseleave", () => {
     if (activeZoneKey !== key) row.style.background = "transparent";
@@ -956,26 +995,34 @@ LEGEND_ORDER.forEach((key) => {
     flyToZone(key);
     openInfoPanel(key);
   });
-  legend.appendChild(row);
+  legendBody.appendChild(row);
   legendRows[key] = row;
 });
+
+legend.appendChild(legendBody);
 document.body.appendChild(legend);
 
+// ═══════════════════════════════════════════════════════════
+// 9.  HINT BAR — thiết kế lại
+// ═══════════════════════════════════════════════════════════
 const hint = document.createElement("div");
 Object.assign(hint.style, {
   position: "fixed",
-  bottom: "16px",
+  bottom: BRAND_H + 10 + "px",
   left: "50%",
   transform: "translateX(-50%)",
-  background: "rgba(5,12,26,.82)",
-  color: "#90b8d8",
-  padding: "8px 22px",
+  background: "rgba(12,30,53,0.82)",
+  color: "rgba(255,255,255,0.65)",
+  padding: "7px 20px",
   borderRadius: "20px",
-  fontSize: "12px",
+  fontSize: "11.5px",
   zIndex: "999",
   whiteSpace: "nowrap",
+  letterSpacing: "0.3px",
+  fontFamily: "'DM Sans', sans-serif",
+  backdropFilter: "blur(8px)",
 });
-hint.textContent = "⏳ Đang tải mô hình...";
+hint.textContent = "Đang tải mô hình...";
 document.body.appendChild(hint);
 
 // ═══════════════════════════════════════════════════════════
@@ -994,18 +1041,13 @@ function flyToZone(key) {
   const sz = shipBBox.getSize(new THREE.Vector3());
   const cen = shipBBox.getCenter(new THREE.Vector3());
   const ty = shipBBox.min.y + sz.y * z.viewRelY;
-
-  // Thượng tầng: nhìn vào đúng đầu tàu có cabin (tự phát hiện qua placePin)
-  let lookZ = cen.z;
-  let az = z.viewAzimuth;
+  let lookZ = cen.z,
+    az = z.viewAzimuth;
   if (key === "thuong_tang") {
     const frac = ZONES.thuong_tang._resolvedZFrac ?? 0.15;
     lookZ = shipBBox.min.z + sz.z * frac;
-    // Camera nhìn từ mạn phải vào cabin: azimuth ≈ 0.22π (nhìn từ phía X+ Z+)
-    // Nếu cabin ở max.z (frac>0.5): camera đứng về phía Z+ → azimuth lớn hơn
     az = frac > 0.5 ? Math.PI * 1.78 : Math.PI * 0.22;
   }
-
   const look = new THREE.Vector3(cen.x, ty, lookZ);
   const pol = z.viewPolar,
     d = z.viewDist;
@@ -1021,9 +1063,7 @@ function flyToZone(key) {
   controls.maxPolarAngle =
     pol > Math.PI * 0.55 ? Math.PI * 0.97 : Math.PI * 0.54;
 }
-function hexRgb(h) {
-  return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(",");
-}
+
 function ease(t) {
   return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 }
@@ -1060,25 +1100,21 @@ new GLTFLoader().load(
     camera.position.set(28, mid + 8, 36);
     controls.update();
     hint.textContent =
-      "🖱 Kéo để xoay  •  Click menu bên trái để xem chi tiết từng khu vực  •  🖼 = ảnh minh họa";
-    console.log(
-      "MESH NAMES:\n",
-      [...new Set(meshes.map((m) => m.name).filter(Boolean))].sort().join("\n"),
-    );
+      "Kéo để xoay  ·  Lăn chuột để phóng to/thu nhỏ  ·  Click danh mục bên trái để xem chi tiết từng khu vực";
   },
   (xhr) => {
     const p = xhr.total ? Math.round((xhr.loaded / xhr.total) * 100) : "...";
-    hint.textContent = `⏳ Đang tải... ${p}%`;
+    hint.textContent = `Đang tải mô hình... ${p}%`;
   },
   (err) => {
     console.error("❌", err);
-    hint.textContent = "❌ Lỗi tải model";
+    hint.textContent = "Lỗi tải mô hình";
     hint.style.color = "#ff6b6b";
   },
 );
 
 // ═══════════════════════════════════════════════════════════
-// 12. RAYCASTING & EVENTS
+// 12. EVENTS
 // ═══════════════════════════════════════════════════════════
 function restoreMesh() {
   if (lastMesh && lastMat) {
@@ -1088,9 +1124,6 @@ function restoreMesh() {
   }
 }
 
-// ── Hover: CHỈ đổi cursor, KHÔNG hiển thị tooltip ──
-// Tooltip bị tắt vì nhận diện zone khi hover không đủ chính xác.
-// Người dùng dùng CLICK hoặc LEGEND để xem thông tin zone.
 window.addEventListener("mousemove", (e) => {
   if (!meshes.length || !shipBBox) return;
   mouse.x = (e.clientX / innerWidth) * 2 - 1;
@@ -1104,21 +1137,17 @@ renderer.domElement.addEventListener("mouseleave", () => {
   restoreMesh();
   renderer.domElement.style.cursor = "grab";
 });
-
-// Click trực tiếp lên tàu: KHÔNG làm gì (chỉ đóng panel nếu click ngoài)
 renderer.domElement.addEventListener("click", (e) => {
   if (!meshes.length || !shipBBox) return;
   mouse.x = (e.clientX / innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   const hits = raycaster.intersectObjects(meshes, false);
-  // Click vào khoảng trống → đóng panel
   if (!hits.length) closeInfoPanel();
-  // Click vào tàu → không làm gì (dùng legend bên trái)
 });
 
 // ═══════════════════════════════════════════════════════════
-// 13. RESIZE & ANIMATE
+// 13. RESIZE & LOOP
 // ═══════════════════════════════════════════════════════════
 window.addEventListener("resize", () => {
   camera.aspect = innerWidth / innerHeight;
@@ -1127,8 +1156,13 @@ window.addEventListener("resize", () => {
 });
 
 const clock = new THREE.Clock();
+
 (function loop() {
   requestAnimationFrame(loop);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  pinElapsed += dt;
+
+  // ── FLY-TO ───────────────────────────────────────────────
   if (flyTarget && flyT < 1) {
     flyT = Math.min(1, flyT + FLY_SPEED);
     const t = ease(flyT);
@@ -1137,23 +1171,53 @@ const clock = new THREE.Clock();
     controls.target.copy(_tl);
     if (flyT >= 1) flyTarget = null;
   }
+
+  // ── PIN ANIMATION ─────────────────────────────────────────
   if (pinGroup) {
-    pinAnimT += clock.getDelta() * 2.0;
-    const bob = Math.sin(pinAnimT * 2) * 0.07;
-    pinGroup.children.forEach((c) => {
-      if (c.userData.isPulse) {
-        const prog =
-          ((pinAnimT + c.userData.phase) % (Math.PI * 2)) / (Math.PI * 2);
-        c.scale.set(0.8 + prog * 2.6, 0.8 + prog * 2.6, 1);
-        c.material.opacity = (1 - prog) * 0.65;
-      } else {
-        if (c.userData.baseY === undefined) c.userData.baseY = c.position.y;
-        c.position.y = c.userData.baseY + bob;
-      }
-    });
-  } else {
-    clock.getDelta();
+    const baseY = pinGroup.userData.baseY ?? 0;
+
+    // BOB: sine với easing "ease-in-out" bằng cách dùng
+    // sin thường nhưng squish theo hướng xuống (giả lực hút)
+    // → nhanh xuống, chậm lên = cảm giác bounce nhẹ
+    const rawSin = Math.sin(pinElapsed * BOB_FREQ); // −1..1
+    // Remap: lên chậm (rawSin>0 → squash), xuống nhanh
+    const bobVal =
+      rawSin > 0
+        ? Math.pow(rawSin, 0.65) * BOB_AMP // lên — chậm hơn
+        : -Math.pow(-rawSin, 1.55) * BOB_AMP * 0.7; // xuống — nhanh hơn
+    pinGroup.position.y = baseY + bobVal;
+
+    // ORBIT RINGS xoay
+    const oA = pinGroup.userData.orbitA;
+    const oB = pinGroup.userData.orbitB;
+    if (oA) oA.rotation.y += oA.userData.spinY * dt;
+    if (oB) oB.rotation.y += oB.userData.spinY * dt;
+
+    // POINT LIGHT pulse cùng nhịp bob — sáng hơn khi ở đỉnh
+    const gl = pinGroup.userData.glowLight;
+    if (gl) gl.intensity = 1.0 + (bobVal / BOB_AMP) * 0.55;
+
+    // PULSE WAVE RINGS — mỗi vòng có phase lệch nhau
+    //   progress 0→1 trong PULSE_PERIOD giây
+    //   r = lerp(0.18s, PULSE_MAX_R×s, progress)
+    //   opacity: mạnh ở giữa, tan biến ở cuối
+    const rings = pinGroup.userData.pulseRings;
+    if (rings) {
+      const s = rings[0]?.userData.pScale ?? 1;
+      rings.forEach((ring) => {
+        const t =
+          ((pinElapsed + ring.userData.phase) % PULSE_PERIOD) / PULSE_PERIOD;
+        const r = (0.18 + t * (PULSE_MAX_R - 0.18)) * s;
+        // RingGeometry innerR = 0.88, outerR = 1.0 → scale để đổi bán kính
+        ring.scale.set(r, r, 1);
+        // opacity: tăng nhanh 0→0.7 lúc t<0.25, giảm dần về 0 lúc t→1
+        const op =
+          t < 0.25 ? (t / 0.25) * 0.65 : 0.65 * (1 - (t - 0.25) / 0.75);
+        ring.material.opacity = op;
+      });
+    }
   }
+
   controls.update();
   renderer.render(scene, camera);
 })();
