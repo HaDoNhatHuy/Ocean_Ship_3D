@@ -182,7 +182,15 @@
     </script>
 
     <script type="module" src="./main.js"></script>
-    <script>
+    <!-- <script>
+      /* CHẶN CTRL + S */
+      document.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.keyCode === 83) {
+          e.preventDefault();
+          // alert("Hành động lưu trang đã bị chặn!");
+        }
+      });
+
       /* CHẶN CHUỘT PHẢI */
       document.addEventListener("contextmenu", (e) => e.preventDefault());
 
@@ -218,6 +226,6 @@
           location.reload();
         }
       }, 1000);
-    </script>
+    </script> -->
   </body>
 </html>
