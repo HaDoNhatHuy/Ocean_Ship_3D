@@ -1171,6 +1171,7 @@ Object.assign(legend.style, {
   minWidth: "220px",
   overflow: "hidden",
   fontFamily: "'DM Sans', sans-serif",
+  transition: "transform .32s cubic-bezier(.4,0,.2,1)", // ← THÊM DÒNG NÀY
 });
 
 const legendHeader = document.createElement("div");
@@ -1223,6 +1224,96 @@ LEGEND_ORDER.forEach((key) => {
 });
 legend.appendChild(legendBody);
 document.body.appendChild(legend);
+
+// ── WRAPPER bọc legend + nút toggle (animate cùng 1 khối) ──
+const legendWrap = document.createElement("div");
+Object.assign(legendWrap.style, {
+  position: "fixed",
+  top: HEADER_H + 12 + "px",
+  left: "0",
+  display: "flex",
+  alignItems: "flex-start",
+  zIndex: "999",
+  transition: "transform .44s cubic-bezier(.25, 0.46, 0.45, 0.94)",
+  willChange: "transform",
+  pointerEvents: "none",
+});
+
+// Chuyển legend từ fixed → relative, gắn vào wrapper
+Object.assign(legend.style, {
+  position: "relative",
+  top: "auto",
+  left: "auto",
+  zIndex: "auto",
+  marginLeft: "16px",
+  pointerEvents: "auto",
+});
+legendWrap.appendChild(legend);
+
+// ── NÚT TOGGLE (luôn dính sát phải legend) ─────────────────
+const legendToggle = document.createElement("button");
+Object.assign(legendToggle.style, {
+  width: "22px",
+  height: "44px",
+  background: "#0c1e35",
+  border: "1px solid rgba(184,151,90,0.5)",
+  borderLeft: "none",
+  borderRadius: "0 7px 7px 0",
+  color: "#d4b07a",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: "0",
+  marginTop: "2px",
+  padding: "0",
+  boxShadow: "4px 2px 12px rgba(12,30,53,0.25)",
+  transition: "background .18s",
+  fontFamily: "'DM Sans', sans-serif",
+  pointerEvents: "auto",
+  outline: "none",
+});
+legendToggle.title = "Ẩn/Hiện menu";
+
+// Mũi tên xoay mượt bằng CSS transform
+const arrowSpan = document.createElement("span");
+Object.assign(arrowSpan.style, {
+  display: "inline-block",
+  fontSize: "17px",
+  lineHeight: "1",
+  color: "#d4b07a",
+  transition: "transform .44s cubic-bezier(.25, 0.46, 0.45, 0.94)",
+  transform: "rotate(0deg)",
+  marginTop: "1px",
+});
+arrowSpan.textContent = "‹";
+legendToggle.appendChild(arrowSpan);
+
+legendToggle.addEventListener("mouseenter", () => {
+  legendToggle.style.background = "#163354";
+  legendToggle.style.color = "#f0c97a";
+});
+legendToggle.addEventListener("mouseleave", () => {
+  legendToggle.style.background = "#0c1e35";
+  legendToggle.style.color = "#d4b07a";
+});
+
+let legendVisible = true;
+legendToggle.addEventListener("click", () => {
+  legendVisible = !legendVisible;
+  if (legendVisible) {
+    legendWrap.style.transform = "translateX(0)";
+    arrowSpan.style.transform = "rotate(0deg)";
+  } else {
+    // Trượt toàn bộ wrapper sang trái, chừa đúng width nút để nó còn thấy
+    const legendW = legend.offsetWidth;
+    legendWrap.style.transform = `translateX(-${legendW + 16}px)`;
+    arrowSpan.style.transform = "rotate(180deg)";
+  }
+});
+
+legendWrap.appendChild(legendToggle);
+document.body.appendChild(legendWrap);
 
 // ── HINT ───────────────────────────────────────────────────
 const hint = document.createElement("div");
