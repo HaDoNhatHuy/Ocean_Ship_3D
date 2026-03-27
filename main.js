@@ -40,7 +40,7 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Chống thấm và bảo vệ tối ưu vùng luôn ngập nước",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Coal tar Epoxy",
@@ -50,7 +50,7 @@ const T = {
           {
             name: "Sơn Chống hà",
             desc: "Ngăn cản sinh vật biển bám vào vỏ tàu",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-chong-ha&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -62,7 +62,7 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Tạo lớp bảo vệ bền vững trong môi trường nước mặn",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Coal tar Epoxy",
@@ -79,12 +79,12 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Chống ăn mòn hiệu quả, nền tốt cho lớp phủ ngoài",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Polyurethane",
             desc: "Giữ màu lâu, bóng đẹp, chịu tia UV tốt",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -96,12 +96,12 @@ const T = {
           {
             name: "Sơn Epoxy",
             desc: "Độ cứng cao, chịu mài mòn và tải trọng cơ học",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Polyurethane",
             desc: "Đàn hồi, chịu va đập và thay đổi nhiệt độ",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn PU 1K",
@@ -118,22 +118,22 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Chống ăn mòn tốt, an toàn với nhiều loại hàng hóa",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Alkyd",
             desc: "Phù hợp hầm hàng khô, chi phí hợp lý",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-alkyd&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Polyurethane",
             desc: "Bền, chống hóa chất cho hàng hóa đặc biệt",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Cao su clo hóa",
             desc: "Kháng hóa chất mạnh, phù hợp hàng hóa ăn mòn",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-caosu-clo-hoa&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -145,7 +145,7 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Bảo vệ kết cấu thép khỏi ăn mòn trong môi trường ẩm",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Coaltar Epoxy",
@@ -155,7 +155,7 @@ const T = {
           {
             name: "Sơn Alkyd",
             desc: "Lớp phủ hoàn thiện bảo vệ và thẩm mỹ",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-alkyd&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -167,12 +167,12 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Lớp lót chống ăn mòn, nền bền vững cho lớp phủ ngoài",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Polyurethane",
             desc: "Màu sắc đẹp, giữ màu lâu, chịu thời tiết khắc nghiệt",
-            link: "#",
+            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn PU 1K",
