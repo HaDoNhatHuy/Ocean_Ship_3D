@@ -28,6 +28,8 @@ const T = {
       tagExterior: "Ngoại thất",
       loadError: "Lỗi tải mô hình",
       toggleBtn: "EN",
+      viewProduct: "Xem sản phẩm",
+      viewProductArrow: "→",
     },
     zones: {
       day_tau: {
@@ -38,14 +40,17 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Chống thấm và bảo vệ tối ưu vùng luôn ngập nước",
+            link: "#",
           },
           {
             name: "Sơn Coal tar Epoxy",
             desc: "Chống thấm, chịu hóa chất, bền trong môi trường biển",
+            link: "#",
           },
           {
             name: "Sơn Chống hà",
             desc: "Ngăn cản sinh vật biển bám vào vỏ tàu",
+            link: "#",
           },
         ],
       },
@@ -57,10 +62,12 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Tạo lớp bảo vệ bền vững trong môi trường nước mặn",
+            link: "#",
           },
           {
             name: "Sơn Coal tar Epoxy",
             desc: "Kháng nước và hóa chất cực tốt, tuổi thọ cao",
+            link: "#",
           },
         ],
       },
@@ -72,10 +79,12 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Chống ăn mòn hiệu quả, nền tốt cho lớp phủ ngoài",
+            link: "#",
           },
           {
             name: "Sơn Polyurethane",
             desc: "Giữ màu lâu, bóng đẹp, chịu tia UV tốt",
+            link: "#",
           },
         ],
       },
@@ -87,14 +96,17 @@ const T = {
           {
             name: "Sơn Epoxy",
             desc: "Độ cứng cao, chịu mài mòn và tải trọng cơ học",
+            link: "#",
           },
           {
             name: "Sơn Polyurethane",
             desc: "Đàn hồi, chịu va đập và thay đổi nhiệt độ",
+            link: "#",
           },
           {
             name: "Sơn PU 1K",
             desc: "Dễ thi công, khô nhanh, thích hợp bảo trì định kỳ",
+            link: "#",
           },
         ],
       },
@@ -106,15 +118,22 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Chống ăn mòn tốt, an toàn với nhiều loại hàng hóa",
+            link: "#",
           },
-          { name: "Sơn Alkyd", desc: "Phù hợp hầm hàng khô, chi phí hợp lý" },
+          {
+            name: "Sơn Alkyd",
+            desc: "Phù hợp hầm hàng khô, chi phí hợp lý",
+            link: "#",
+          },
           {
             name: "Sơn Polyurethane",
             desc: "Bền, chống hóa chất cho hàng hóa đặc biệt",
+            link: "#",
           },
           {
             name: "Sơn Cao su clo hóa",
             desc: "Kháng hóa chất mạnh, phù hợp hàng hóa ăn mòn",
+            link: "#",
           },
         ],
       },
@@ -126,12 +145,18 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Bảo vệ kết cấu thép khỏi ăn mòn trong môi trường ẩm",
+            link: "#",
           },
           {
             name: "Sơn Coaltar Epoxy",
             desc: "Chống ẩm, chống thấm tuyệt vời cho kết cấu nội thất",
+            link: "#",
           },
-          { name: "Sơn Alkyd", desc: "Lớp phủ hoàn thiện bảo vệ và thẩm mỹ" },
+          {
+            name: "Sơn Alkyd",
+            desc: "Lớp phủ hoàn thiện bảo vệ và thẩm mỹ",
+            link: "#",
+          },
         ],
       },
       thuong_tang: {
@@ -142,14 +167,17 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Lớp lót chống ăn mòn, nền bền vững cho lớp phủ ngoài",
+            link: "#",
           },
           {
             name: "Sơn Polyurethane",
             desc: "Màu sắc đẹp, giữ màu lâu, chịu thời tiết khắc nghiệt",
+            link: "#",
           },
           {
             name: "Sơn PU 1K",
             desc: "Hoàn thiện nhanh, bóng đẹp cho khu vực cabin",
+            link: "#",
           },
         ],
       },
@@ -175,6 +203,8 @@ const T = {
       tagExterior: "Exterior",
       loadError: "Failed to load model",
       toggleBtn: "VI",
+      viewProduct: "View Product",
+      viewProductArrow: "→",
     },
     zones: {
       day_tau: {
@@ -185,14 +215,17 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Optimal waterproofing and protection for permanently submerged areas",
+            link: "#",
           },
           {
             name: "Coal Tar Epoxy Paint",
             desc: "Waterproof, chemical-resistant, durable in marine environments",
+            link: "#",
           },
           {
             name: "Anti-fouling Paint",
             desc: "Prevents marine organisms from attaching to the hull",
+            link: "#",
           },
         ],
       },
@@ -204,10 +237,12 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Creates a durable protective layer in saltwater environments",
+            link: "#",
           },
           {
             name: "Coal Tar Epoxy Paint",
             desc: "Excellent water and chemical resistance with long service life",
+            link: "#",
           },
         ],
       },
@@ -219,10 +254,12 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Effective corrosion protection, excellent base for topcoats",
+            link: "#",
           },
           {
             name: "Polyurethane Paint",
             desc: "Long-lasting color, high gloss finish, good UV resistance",
+            link: "#",
           },
         ],
       },
@@ -234,14 +271,17 @@ const T = {
           {
             name: "Epoxy Paint",
             desc: "High hardness, resistant to abrasion and mechanical loads",
+            link: "#",
           },
           {
             name: "Polyurethane Paint",
             desc: "Elastic, resistant to impact and temperature changes",
+            link: "#",
           },
           {
             name: "1K PU Paint",
             desc: "Easy application, fast drying, suitable for periodic maintenance",
+            link: "#",
           },
         ],
       },
@@ -253,18 +293,22 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Good corrosion protection, safe with a wide range of cargo",
+            link: "#",
           },
           {
             name: "Alkyd Paint",
             desc: "Suitable for dry cargo holds, cost-effective solution",
+            link: "#",
           },
           {
             name: "Polyurethane Paint",
             desc: "Durable, chemical-resistant for special cargo",
+            link: "#",
           },
           {
             name: "Chlorinated Rubber Paint",
             desc: "Strong chemical resistance, suitable for corrosive cargo",
+            link: "#",
           },
         ],
       },
@@ -276,14 +320,17 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Protects steel structures from corrosion in humid environments",
+            link: "#",
           },
           {
             name: "Coaltar Epoxy Paint",
             desc: "Excellent moisture and waterproofing for interior structures",
+            link: "#",
           },
           {
             name: "Alkyd Paint",
             desc: "Finishing coat for protection and aesthetic appeal",
+            link: "#",
           },
         ],
       },
@@ -295,14 +342,17 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Anti-corrosion primer, durable base for exterior topcoats",
+            link: "#",
           },
           {
             name: "Polyurethane Paint",
             desc: "Beautiful colors, long-lasting finish, resistant to harsh weather",
+            link: "#",
           },
           {
             name: "1K PU Paint",
             desc: "Fast finishing, high gloss for cabin areas",
+            link: "#",
           },
         ],
       },
@@ -1058,7 +1108,149 @@ function highlightZone(key) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 6. INFO PANEL + LEGEND + FLY-TO
+// 6. INJECT PRODUCT-LINK STYLES
+// ═══════════════════════════════════════════════════════════
+const productLinkStyles = document.createElement("style");
+productLinkStyles.textContent = `
+  /* Paint card với link */
+  .paint-card {
+    margin-bottom: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 1px 4px rgba(12,30,53,0.06);
+    transition: box-shadow .2s, transform .2s;
+    background: #ffffff;
+  }
+  .paint-card:hover {
+    box-shadow: 0 4px 16px rgba(12,30,53,0.12);
+    transform: translateY(-1px);
+  }
+  .paint-card-body {
+    display: flex;
+    gap: 12px;
+    padding: 11px 13px 8px;
+    align-items: flex-start;
+  }
+  .paint-num {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 1px;
+  }
+  .paint-info { flex: 1; min-width: 0; }
+  .paint-name {
+    font-weight: 600;
+    color: #0c1e35;
+    font-size: 13px;
+    margin-bottom: 3px;
+    line-height: 1.35;
+  }
+  .paint-desc {
+    color: #8599aa;
+    font-size: 11.5px;
+    line-height: 1.5;
+  }
+  .paint-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 13px 10px 47px;
+  }
+  .product-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px 4px 9px;
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-decoration: none;
+    border: 1.5px solid currentColor;
+    transition: background .18s, color .18s, box-shadow .18s, transform .15s;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .product-link::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity .18s;
+  }
+  .product-link:hover::before { opacity: 0.1; }
+  .product-link:hover {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    transform: translateX(2px);
+  }
+  .product-link:hover .link-arrow {
+    transform: translateX(3px);
+  }
+  .link-icon {
+    font-size: 11px;
+    opacity: 0.75;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .link-text {
+    position: relative;
+    z-index: 1;
+    line-height: 1;
+  }
+  .link-arrow {
+    font-size: 12px;
+    position: relative;
+    z-index: 1;
+    transition: transform .18s;
+    opacity: 0.8;
+    line-height: 1;
+  }
+
+  /* Paint section header */
+  .paint-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px 10px;
+  }
+  .paint-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    color: #8599aa;
+    text-transform: uppercase;
+  }
+  .paint-section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, #eef0f3, transparent);
+  }
+  .paint-count-badge {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    color: #fff;
+  }
+`;
+document.head.appendChild(productLinkStyles);
+
+// ═══════════════════════════════════════════════════════════
+// 7. INFO PANEL + LEGEND + FLY-TO
 // ═══════════════════════════════════════════════════════════
 const infoPanel = document.createElement("div");
 Object.assign(infoPanel.style, {
@@ -1080,6 +1272,8 @@ Object.assign(infoPanel.style, {
   fontSize: "13px",
   lineHeight: "1.65",
   fontFamily: "'DM Sans', sans-serif",
+  scrollbarWidth: "thin",
+  scrollbarColor: "#dde3ea transparent",
 });
 document.body.appendChild(infoPanel);
 let activeZoneKey = null;
@@ -1098,8 +1292,41 @@ function hexRgb(h) {
   return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(",");
 }
 
+// ── BUILD PAINT CARD HTML ────────────────────────────────────────────────────
+function buildPaintCard(p, i, zoneColor) {
+  const rgb = hexRgb(zoneColor);
+  const linkHref = p.link && p.link !== "#" ? p.link : "#";
+  const isPlaceholder = !p.link || p.link === "#";
+  const target = isPlaceholder
+    ? ""
+    : 'target="_blank" rel="noopener noreferrer"';
+
+  return `
+    <div class="paint-card">
+      <div class="paint-card-body">
+        <div class="paint-num" style="background:${zoneColor}">${i + 1}</div>
+        <div class="paint-info">
+          <div class="paint-name">${p.name}</div>
+          <div class="paint-desc">${p.desc}</div>
+        </div>
+      </div>
+      <div class="paint-card-footer">
+        <a
+          href="${linkHref}"
+          ${target}
+          class="product-link"
+          style="color:${zoneColor};"
+          onclick="${isPlaceholder ? "return false;" : ""}"
+        >
+          <span class="link-icon">⬡</span>
+          <span class="link-text">${ui().viewProduct}</span>
+          <span class="link-arrow">→</span>
+        </a>
+      </div>
+    </div>`;
+}
+
 function openInfoPanel(key) {
-  // Merge 3D/geometry data with translated text
   const zBase = ZONES[key];
   const zText = getZoneText(key);
   const z = { ...zBase, ...zText };
@@ -1121,20 +1348,38 @@ function openInfoPanel(key) {
   const rgb = hexRgb(zBase.color);
 
   const diagramHTML = isInterior
-    ? `<div style="padding:14px 18px 4px;border-bottom:1px solid #eee"><div style="font-size:10px;font-weight:600;letter-spacing:1.2px;color:#8599aa;text-transform:uppercase;margin-bottom:8px">${ui().diagramLabel}</div><div class="diagram-glow-wrap" style="--glow-rgb:${rgb}"><img src="${DIAGRAM_IMAGES[key]}" alt="${z.name}" style="width:100%;display:block;object-fit:cover;max-height:180px;position:relative;z-index:1"/></div></div>`
+    ? `<div style="padding:14px 18px 4px;border-bottom:1px solid #eef0f3"><div style="font-size:10px;font-weight:600;letter-spacing:1.2px;color:#8599aa;text-transform:uppercase;margin-bottom:8px">${ui().diagramLabel}</div><div class="diagram-glow-wrap" style="--glow-rgb:${rgb}"><img src="${DIAGRAM_IMAGES[key]}" alt="${z.name}" style="width:100%;display:block;object-fit:cover;max-height:180px;position:relative;z-index:1"/></div></div>`
     : "";
+
+  const paintsHTML = z.paints
+    .map((p, i) => buildPaintCard(p, i, zBase.color))
+    .join("");
 
   infoPanel.innerHTML = `
     <div style="padding:16px 18px 14px;border-bottom:1px solid #eef0f3;position:relative">
       <button id="closePanel" style="position:absolute;top:14px;right:14px;background:none;border:1px solid #d4d8df;color:#8599aa;width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:12px;line-height:22px;text-align:center;transition:all .15s;font-family:inherit" onmouseover="this.style.background='#f0f2f5';this.style.color='#0c1e35'" onmouseout="this.style.background='none';this.style.color='#8599aa'">✕</button>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="width:12px;height:12px;background:${zBase.color};border-radius:2px;display:inline-block;flex-shrink:0"></span><span style="font-size:10px;font-weight:600;letter-spacing:1px;color:#8599aa;text-transform:uppercase">${typeDot} ${typeLabel}</span></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="width:12px;height:12px;background:${zBase.color};border-radius:2px;display:inline-block;flex-shrink:0"></span>
+        <span style="font-size:10px;font-weight:600;letter-spacing:1px;color:#8599aa;text-transform:uppercase">${typeDot} ${typeLabel}</span>
+      </div>
       <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#0c1e35;line-height:1.2">${z.name}</div>
-    </div>${diagramHTML}
+    </div>
+
+    ${diagramHTML}
+
     <div style="padding:14px 18px;color:#4a6070;font-size:12.5px;line-height:1.8;border-bottom:1px solid #eef0f3">${z.description}</div>
-    <div style="padding:14px 18px 18px">
-      <div style="font-size:10px;font-weight:600;letter-spacing:1.2px;color:#8599aa;text-transform:uppercase;margin-bottom:12px">${ui().paintLabel}</div>
-      ${z.paints.map((p, i) => `<div style="display:flex;gap:12px;margin-bottom:8px;padding:10px 12px;background:#f7f9fb;border-radius:6px;border-left:3px solid ${zBase.color}"><div style="flex-shrink:0;width:20px;height:20px;background:${zBase.color};border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-top:2px">${i + 1}</div><div><div style="font-weight:600;color:#0c1e35;font-size:13px;margin-bottom:3px">${p.name}</div><div style="color:#8599aa;font-size:11.5px">${p.desc}</div></div></div>`).join("")}
+
+    <div style="padding:0 0 16px">
+      <div class="paint-section-header">
+        <span class="paint-section-label">${ui().paintLabel}</span>
+        <div class="paint-section-line"></div>
+        <span class="paint-count-badge" style="background:${zBase.color}">${z.paints.length}</span>
+      </div>
+      <div style="padding:0 14px">
+        ${paintsHTML}
+      </div>
     </div>`;
+
   document
     .getElementById("closePanel")
     .addEventListener("click", closeInfoPanel);
@@ -1171,7 +1416,7 @@ Object.assign(legend.style, {
   minWidth: "220px",
   overflow: "hidden",
   fontFamily: "'DM Sans', sans-serif",
-  transition: "transform .32s cubic-bezier(.4,0,.2,1)", // ← THÊM DÒNG NÀY
+  transition: "transform .32s cubic-bezier(.4,0,.2,1)",
 });
 
 const legendHeader = document.createElement("div");
@@ -1239,7 +1484,6 @@ Object.assign(legendWrap.style, {
   pointerEvents: "none",
 });
 
-// Chuyển legend từ fixed → relative, gắn vào wrapper
 Object.assign(legend.style, {
   position: "relative",
   top: "auto",
@@ -1250,7 +1494,6 @@ Object.assign(legend.style, {
 });
 legendWrap.appendChild(legend);
 
-// ── NÚT TOGGLE (luôn dính sát phải legend) ─────────────────
 const legendToggle = document.createElement("button");
 Object.assign(legendToggle.style, {
   width: "22px",
@@ -1275,7 +1518,6 @@ Object.assign(legendToggle.style, {
 });
 legendToggle.title = "Ẩn/Hiện menu";
 
-// Mũi tên xoay mượt bằng CSS transform
 const arrowSpan = document.createElement("span");
 Object.assign(arrowSpan.style, {
   display: "inline-block",
@@ -1305,7 +1547,6 @@ legendToggle.addEventListener("click", () => {
     legendWrap.style.transform = "translateX(0)";
     arrowSpan.style.transform = "rotate(0deg)";
   } else {
-    // Trượt toàn bộ wrapper sang trái, chừa đúng width nút để nó còn thấy
     const legendW = legend.offsetWidth;
     legendWrap.style.transform = `translateX(-${legendW + 16}px)`;
     arrowSpan.style.transform = "rotate(180deg)";
@@ -1377,27 +1618,22 @@ function toggleLanguage() {
   document.getElementById("langLabel").textContent = ui().toggleBtn;
   updateStaticUI();
   updateLegendText();
-  // Re-render info panel in new language if open
   if (activeZoneKey) openInfoPanel(activeZoneKey);
 }
 
 function updateStaticUI() {
-  // Update header bar texts
   const headerTitle = document.querySelector("#header-bar .header-title");
   const headerSub = document.querySelector("#header-bar .header-sub");
   if (headerTitle) headerTitle.textContent = ui().headerTitle;
   if (headerSub) headerSub.textContent = ui().headerSub;
-  // Update hint (only if model is loaded)
   if (shipBBox) hint.textContent = ui().hintReady;
 }
 
 function updateLegendText() {
-  // Update legend header
   const ltEl = legendHeader.querySelector("[data-legend-title]");
   const lsEl = legendHeader.querySelector("[data-legend-subtitle]");
   if (ltEl) ltEl.textContent = ui().legendTitle;
   if (lsEl) lsEl.textContent = ui().legendSubtitle;
-  // Update each row
   LEGEND_ORDER.forEach((key) => {
     const row = legendRows[key];
     const nameEl = row.querySelector(".legend-name");
@@ -1450,7 +1686,7 @@ function ease(t) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 7. TẢI MODEL
+// 8. TẢI MODEL
 // ═══════════════════════════════════════════════════════════
 const raycaster = new THREE.Raycaster(),
   mouse = new THREE.Vector2();
@@ -1494,7 +1730,7 @@ new GLTFLoader().load(
 );
 
 // ═══════════════════════════════════════════════════════════
-// 8. EVENTS
+// 9. EVENTS
 // ═══════════════════════════════════════════════════════════
 window.addEventListener("mousemove", (e) => {
   if (!meshes.length || !shipBBox) return;
