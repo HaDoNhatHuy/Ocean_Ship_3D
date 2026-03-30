@@ -30,10 +30,15 @@ const T = {
       toggleBtn: "EN",
       viewProduct: "Xem sản phẩm",
       viewProductArrow: "→",
+      ctaConsultLabel: "Nhận tư vấn miễn phí",
+      ctaConsultSub: "Chuyên gia Sơn Hải Vân sẽ hỗ trợ bạn chọn đúng hệ sơn",
+      ctaConsultBtn: "Liên hệ tư vấn ngay",
+      ctaInlineLabel: "Cần tư vấn thêm?",
+      ctaInlineBtn: "Gặp chuyên gia →",
     },
     zones: {
       day_tau: {
-        name: "Đáy Tàu",
+        name: "Đáy tàu",
         description:
           "Phần luôn ngập trong nước của tàu, chịu sự tấn công của rất nhiều tác nhân ăn mòn trong những điều kiện khắc nghiệt. Hệ thống sơn bảo vệ bao gồm lớp chống ăn mòn và lớp chống bám bẩu của sinh vật biển.",
         paints: [
@@ -72,7 +77,7 @@ const T = {
         ],
       },
       man_kho: {
-        name: "Mạn Khô và be chắn sóng",
+        name: "Mạn khô & Be chắn sóng",
         description:
           "Vị trí thuộc vỏ tàu ít tiếp xúc với nước, tiếp xúc thường xuyên hơn với ánh nắng. Lựa chọn hệ sơn cần giữ màu tốt và chống ăn mòn hiệu quả.",
         paints: [
@@ -89,7 +94,7 @@ const T = {
         ],
       },
       mat_boong: {
-        name: "Mặt Boong & Lối Đi",
+        name: "Mặt boong & Lối đi",
         description:
           "Các vị trí đi lại, di chuyển, không ngập nước, tiếp xúc thường xuyên với ánh nắng, mưa bão. Sơn cần độ bám tốt, chống trơn trượt và chịu tải trọng cơ học.",
         paints: [
@@ -111,7 +116,7 @@ const T = {
         ],
       },
       ham_hang: {
-        name: "Hầm Hàng",
+        name: "Hầm hàng",
         description:
           "Khu vực chứa hàng bên trong thân tàu. Các giải pháp chống ăn mòn dựa trên điều kiện và tính chất của hàng hóa mà tàu vận chuyển. Cần lựa chọn hệ sơn phù hợp với loại hàng hóa cụ thể.",
         paints: [
@@ -138,7 +143,7 @@ const T = {
         ],
       },
       he_thong_khung: {
-        name: "Hệ Thống Khung Xương",
+        name: "Hệ thống khung xương",
         description:
           "Khu vực chịu lực cho tàu, phân bố đều trong thân tàu theo chiều ngang và dọc. Không tiếp xúc trực tiếp với nước nhưng dễ phát sinh hơi ẩm do ngưng tụ.",
         paints: [
@@ -160,7 +165,7 @@ const T = {
         ],
       },
       thuong_tang: {
-        name: "Thượng Tầng & Cabin",
+        name: "Thượng tầng & Cabin",
         description:
           "Khu vực thượng tầng tàu, bao gồm cabin và các công trình trên boong. Tiếp xúc nhiều với thời tiết, ánh nắng và mưa bão. Yêu cầu thẩm mỹ cao bên cạnh khả năng bảo vệ.",
         paints: [
@@ -185,7 +190,7 @@ const T = {
     // ── MỚI: Sub-zones cho Đáy Tàu ────────────────────────
     sub_zones: {
       day_tau_bang: {
-        name: "Đáy Bằng",
+        name: "Đáy bằng",
         description:
           "Phần tấm đáy phẳng nằm ngang của tàu, vuông góc với phương thẳng đứng. Đây là khu vực chịu áp lực nước trực tiếp và thường là điểm tích tụ của cặn bẩn, rong rêu biển. Cần hệ sơn có khả năng chống thấm và chống hà mạnh nhất.",
         paints: [
@@ -207,7 +212,7 @@ const T = {
         ],
       },
       day_tau_xien: {
-        name: "Đáy Xiên",
+        name: "Đáy xiên",
         description:
           "Phần vỏ cong/xiên nối tiếp giữa đáy bằng và mạn tàu (vùng bilge). Khu vực này chịu ứng suất cơ học phức tạp và tiếp xúc xen kẽ giữa môi trường ngập nước và vùng không ổn định, đòi hỏi hệ sơn có độ bám dính và độ đàn hồi cao.",
         paints: [
@@ -252,6 +257,12 @@ const T = {
       toggleBtn: "VI",
       viewProduct: "View Product",
       viewProductArrow: "→",
+      ctaConsultLabel: "Free Consultation",
+      ctaConsultSub:
+        "Sơn Hải Vân experts will help you choose the right coating system",
+      ctaConsultBtn: "Contact Our Experts Now",
+      ctaInlineLabel: "Need more advice?",
+      ctaInlineBtn: "Talk to an expert →",
     },
     zones: {
       day_tau: {
@@ -458,6 +469,9 @@ const T = {
 const ui = () => T[currentLang].ui;
 const getZoneText = (key) => T[currentLang].zones[key];
 const getSubZoneText = (key) => T[currentLang].sub_zones[key]; // ── MỚI
+
+// ── URL tư vấn — chỉnh tại đây khi cần ──────────────────────
+const CTA_URL = "https://haivan.terax.dev/lien-he/";
 
 // ═══════════════════════════════════════════════════════════
 // 1. DỮ LIỆU VÙNG TÀU
@@ -1469,6 +1483,139 @@ productLinkStyles.textContent = `
     letter-spacing: 0.5px;
     color: #fff;
   }
+
+  /* ── CTA BLOCK ── */
+  .cta-inline-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    margin: 10px 18px 2px;
+    background: #f7f9fb;
+    border: 1px solid #eaecf0;
+    border-radius: 8px;
+  }
+  .cta-inline-label {
+    font-size: 11.5px;
+    color: #8599aa;
+    font-weight: 400;
+  }
+  .cta-inline-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-decoration: none;
+    color: #0c1e35;
+    border: 1.5px solid #0c1e35;
+    border-radius: 20px;
+    padding: 3px 12px;
+    white-space: nowrap;
+    transition: background .18s, color .18s, transform .15s;
+    flex-shrink: 0;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .cta-inline-btn:hover {
+    background: #0c1e35;
+    color: #d4b07a;
+    transform: translateX(2px);
+  }
+
+  .cta-block-wrap {
+    margin: 6px 14px 18px;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+  .cta-block-inner {
+    background: linear-gradient(135deg, #0c1e35 0%, #163354 60%, #1a4068 100%);
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-block-inner::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(184,151,90,0.08);
+    pointer-events: none;
+  }
+  .cta-block-inner::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: 30px;
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    background: rgba(184,151,90,0.05);
+    pointer-events: none;
+  }
+  .cta-block-icon {
+    font-size: 20px;
+    line-height: 1;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .cta-block-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    position: relative;
+  }
+  .cta-block-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.55;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .cta-block-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: linear-gradient(90deg, #b8975a 0%, #d4b07a 100%);
+    color: #0c1e35;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    padding: 9px 18px;
+    border-radius: 24px;
+    transition: filter .2s, transform .18s, box-shadow .2s;
+    box-shadow: 0 4px 16px rgba(184,151,90,0.35);
+    white-space: nowrap;
+    position: relative;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .cta-block-btn:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(184,151,90,0.5);
+  }
+  .cta-block-btn:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
+  }
+  .cta-block-btn-arrow {
+    font-size: 15px;
+    transition: transform .18s;
+    line-height: 1;
+  }
+  .cta-block-btn:hover .cta-block-btn-arrow {
+    transform: translateX(3px);
+  }
+  .cta-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #eef0f3 20%, #eef0f3 80%, transparent);
+    margin: 4px 0 10px;
+  }
 `;
 document.head.appendChild(productLinkStyles);
 
@@ -1508,7 +1655,7 @@ glowStyle.textContent = `@keyframes diagramGlowPulse{0%,100%{box-shadow:0 0 0px 
 document.head.appendChild(glowStyle);
 
 const DIAGRAM_IMAGES = {
-  ham_hang: "./images/ham-hang-1.jpg",
+  ham_hang: "./images/ham-hang.png",
   he_thong_khung: "./images/khung-xuong-tau.png",
 };
 function hexRgb(h) {
@@ -1617,6 +1764,30 @@ function openInfoPanel(key) {
     .map((p, i) => buildPaintCard(p, i, zBase.color))
     .join("");
 
+  // ── CTA inline (sau mô tả) ──────────────────────────────
+  const ctaInlineHTML = `
+    <div class="cta-inline-wrap">
+      <span class="cta-inline-label">${ui().ctaInlineLabel}</span>
+      <a href="${CTA_URL}" target="_blank" rel="noopener noreferrer" class="cta-inline-btn">
+        ${ui().ctaInlineBtn}
+      </a>
+    </div>`;
+
+  // ── CTA block lớn (cuối panel) ──────────────────────────
+  const ctaBlockHTML = `
+    <div class="cta-divider"></div>
+    <div class="cta-block-wrap">
+      <div class="cta-block-inner">
+        <span class="cta-block-icon">💬</span>
+        <div class="cta-block-label">${ui().ctaConsultLabel}</div>
+        <div class="cta-block-sub">${ui().ctaConsultSub}</div>
+        <a href="${CTA_URL}" target="_blank" rel="noopener noreferrer" class="cta-block-btn">
+          ${ui().ctaConsultBtn}
+          <span class="cta-block-btn-arrow">→</span>
+        </a>
+      </div>
+    </div>`;
+
   infoPanel.innerHTML = `
     <div style="padding:16px 18px 14px;border-bottom:1px solid #eef0f3;position:relative">
       <button id="closePanel" style="position:absolute;top:14px;right:14px;background:none;border:1px solid #d4d8df;color:#8599aa;width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:12px;line-height:22px;text-align:center;transition:all .15s;font-family:inherit" onmouseover="this.style.background='#f0f2f5';this.style.color='#0c1e35'" onmouseout="this.style.background='none';this.style.color='#8599aa'">✕</button>
@@ -1628,15 +1799,18 @@ function openInfoPanel(key) {
       <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#0c1e35;line-height:1.2">${z.name}</div>
     </div>
     ${diagramHTML}
-    <div style="padding:14px 18px;color:#4a6070;font-size:12.5px;line-height:1.8;border-bottom:1px solid #eef0f3">${z.description}</div>
-    <div style="padding:0 0 16px">
+    <div style="padding:14px 18px 10px;color:#4a6070;font-size:12.5px;line-height:1.8">${z.description}</div>
+    ${ctaInlineHTML}
+    <div style="height:1px;background:#eef0f3;margin:10px 0 0"></div>
+    <div style="padding:0 0 4px">
       <div class="paint-section-header">
         <span class="paint-section-label">${ui().paintLabel}</span>
         <div class="paint-section-line"></div>
         <span class="paint-count-badge" style="background:${zBase.color}">${z.paints.length}</span>
       </div>
       <div style="padding:0 14px">${paintsHTML}</div>
-    </div>`;
+    </div>
+    ${ctaBlockHTML}`;
 
   document
     .getElementById("closePanel")
