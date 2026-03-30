@@ -1655,7 +1655,7 @@ glowStyle.textContent = `@keyframes diagramGlowPulse{0%,100%{box-shadow:0 0 0px 
 document.head.appendChild(glowStyle);
 
 const DIAGRAM_IMAGES = {
-  ham_hang: "./images/ham-hang.png",
+  ham_hang: "./images/ham-hang-1.jpg",
   he_thong_khung: "./images/khung-xuong-tau.png",
 };
 function hexRgb(h) {
