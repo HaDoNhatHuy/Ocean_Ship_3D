@@ -18,8 +18,6 @@ const T = {
       hintLoadingPct: (p) => `Đang tải mô hình... ${p}%`,
       hintReady:
         "Kéo để xoay · Lăn chuột để phóng to/thu nhỏ · Click danh mục bên trái để xem chi tiết từng khu vực",
-      hintReadyMobile:
-        "Chạm & kéo để xoay · Chụm/mở để zoom · Chọn vùng bên trái",
       typeInterior: "Khu vực bên trong",
       typeExterior: "Khu vực bề mặt ngoài",
       dotInterior: "▪",
@@ -37,7 +35,6 @@ const T = {
       ctaConsultBtn: "Liên hệ tư vấn ngay",
       ctaInlineLabel: "Cần tư vấn thêm?",
       ctaInlineBtn: "Gặp chuyên gia →",
-      legendBtn: "Vùng sơn",
     },
     zones: {
       day_tau: {
@@ -190,6 +187,7 @@ const T = {
         ],
       },
     },
+    // ── MỚI: Sub-zones cho Đáy Tàu ────────────────────────
     sub_zones: {
       day_tau_bang: {
         name: "Đáy bằng",
@@ -247,8 +245,6 @@ const T = {
       hintLoadingPct: (p) => `Loading model... ${p}%`,
       hintReady:
         "Drag to rotate · Scroll to zoom · Click a category on the left for zone details",
-      hintReadyMobile:
-        "Touch & drag to rotate · Pinch to zoom · Select zone on left",
       typeInterior: "Interior Area",
       typeExterior: "Exterior Surface",
       dotInterior: "▪",
@@ -267,7 +263,6 @@ const T = {
       ctaConsultBtn: "Contact Our Experts Now",
       ctaInlineLabel: "Need more advice?",
       ctaInlineBtn: "Talk to an expert →",
-      legendBtn: "Zones",
     },
     zones: {
       day_tau: {
@@ -420,6 +415,7 @@ const T = {
         ],
       },
     },
+    // ── NEW: Sub-zones for Ship Bottom ─────────────────────
     sub_zones: {
       day_tau_bang: {
         name: "Flat Bottom",
@@ -469,14 +465,12 @@ const T = {
   },
 };
 
+// Helpers
 const ui = () => T[currentLang].ui;
 const getZoneText = (key) => T[currentLang].zones[key];
-const getSubZoneText = (key) => T[currentLang].sub_zones[key];
+const getSubZoneText = (key) => T[currentLang].sub_zones[key]; // ── MỚI
 
-// ── Mobile helper ─────────────────────────────────────────
-const isMobile = () => window.innerWidth <= 768;
-
-// ── URL tư vấn ───────────────────────────────────────────
+// ── URL tư vấn — chỉnh tại đây khi cần ──────────────────────
 const CTA_URL = "https://haivan.terax.dev/lien-he/";
 
 // ═══════════════════════════════════════════════════════════
@@ -562,14 +556,18 @@ const ZONES = {
   },
 };
 
+// ── MỚI: Sub-zones cho Đáy Tàu ─────────────────────────────
+// Chia theo dải Y thực tế thay vì filter normal để tránh lem nhem:
+//   day_tau_bang : 0% → 8%  chiều cao tàu  (tấm đáy phẳng)
+//   day_tau_xien : 8% → 19% chiều cao tàu  (bilge / đáy cong chuyển tiếp)
 const SUB_ZONES = {
   day_tau_bang: {
     parent: "day_tau",
-    color: "#00897b",
+    color: "#00897b", // Teal xanh lá biển
     type: "exterior",
     relYMin: 0.0,
-    relYMax: 0.08,
-    normalType: 0,
+    relYMax: 0.08, // Chỉ dải thấp nhất — đáy phẳng sạch
+    normalType: 0, // Không filter normal → phủ màu đồng đều
     pinCast: { from: "below", relY: 0.01, relXFrac: 0.5, relZFrac: 0.5 },
     viewRelY: 0.02,
     viewDist: 18,
@@ -578,11 +576,11 @@ const SUB_ZONES = {
   },
   day_tau_xien: {
     parent: "day_tau",
-    color: "#f57c00",
+    color: "#f57c00", // Cam hổ phách — phân biệt rõ với mạn ướt
     type: "exterior",
-    relYMin: 0.08,
-    relYMax: 0.19,
-    normalType: 0,
+    relYMin: 0.08, // Bắt đầu ngay trên đáy bằng
+    relYMax: 0.19, // Đến hết vùng đáy tàu
+    normalType: 0, // Không filter normal → phủ màu đồng đều
     pinCast: { from: "side_right", relY: 0.13, relXFrac: 1.0, relZFrac: 0.42 },
     viewRelY: 0.13,
     viewDist: 22,
@@ -591,6 +589,7 @@ const SUB_ZONES = {
   },
 };
 
+// Helper: lấy zone data (ZONES hoặc SUB_ZONES)
 const getAnyZone = (key) => ZONES[key] || SUB_ZONES[key];
 
 const LEGEND_ORDER = [
@@ -602,6 +601,7 @@ const LEGEND_ORDER = [
   "he_thong_khung",
   "thuong_tang",
 ];
+
 const SUB_ZONE_ORDER = ["day_tau_bang", "day_tau_xien"];
 
 // ═══════════════════════════════════════════════════════════
@@ -824,11 +824,6 @@ controls.dampingFactor = 0.07;
 controls.minDistance = 3;
 controls.maxDistance = 110;
 controls.maxPolarAngle = Math.PI * 0.54;
-// Mobile touch settings
-controls.touches = {
-  ONE: THREE.TOUCH.ROTATE,
-  TWO: THREE.TOUCH.DOLLY_PAN,
-};
 
 scene.add(new THREE.AmbientLight(0xffffff, 1.2));
 const sun = new THREE.DirectionalLight(0xfff8f0, 2.0);
@@ -1089,8 +1084,10 @@ function placePin(key, meshList) {
     scene.remove(pinGroup);
     pinGroup = null;
   }
+  // Hỗ trợ cả ZONES và SUB_ZONES
   const z = ZONES[key] || SUB_ZONES[key];
   if (!z || z.type !== "exterior" || !shipBBox || !z.pinCast) return;
+  // Scale pin: day_tau parent lớn hơn, sub-zones nhỏ hơn
   const s = key === "day_tau" ? 3.5 : key in SUB_ZONES ? 2.2 : 1.0;
   const result = castToSurface(z.pinCast, shipBBox, meshList);
   pinGroup = buildPin(z.color, s);
@@ -1148,6 +1145,7 @@ function initZoneMap() {
   });
 }
 
+// ── MỚI: shader hỗ trợ normalType 3 (đáy bằng) & 4 (đáy xiên) ──
 function makeZoneMat(origMat, yMin, yMax, hlColorHex, normalType, extraOpts) {
   extraOpts = extraOpts || {};
   const mat = origMat.clone();
@@ -1195,10 +1193,13 @@ function makeZoneMat(origMat, yMin, yMax, hlColorHex, normalType, extraOpts) {
         bool _inBand = (vWPos.y >= u_yMin && vWPos.y <= u_yMax);
         bool _normOk = true;
         if (u_normType > 3.5) {
+          // Type 4: Đáy Xiên (Bilge) — normal xiên góc, không thẳng đứng
           _normOk = (vWNorm.y >= -0.68 && vWNorm.y < 0.12);
         } else if (u_normType > 2.5) {
+          // Type 3: Đáy Bằng — normal hướng xuống mạnh
           _normOk = (vWNorm.y < -0.68);
         } else if (u_normType > 1.5) {
+          // Type 2: man_kho special
           bool _normCond = (vWNorm.y < 0.18);
           float _relX = abs(vWPos.x - u_cx) / u_xw;
           bool _outerSkin = (_relX > 0.78);
@@ -1206,6 +1207,7 @@ function makeZoneMat(origMat, yMin, yMax, hlColorHex, normalType, extraOpts) {
           bool _posCond   = (_outerSkin || _atEnds);
           _normOk = _normCond && _posCond;
         } else if (u_normType > 0.5) {
+          // Type 1: Mặt Boong — normal hướng lên
           _normOk = (vWNorm.y > 0.25);
         }
         bool _inZone = _inBand && _normOk;
@@ -1231,16 +1233,20 @@ function clearHighlight() {
   _hlMatsToDispose = [];
 }
 
+// ── Hỗ trợ cả ZONES và SUB_ZONES ──────────────────────────
 function highlightZone(key) {
   if (!meshes.length || !shipBBox) return;
   clearHighlight();
   activeHighlightKey = key;
+
   const z = ZONES[key] || SUB_ZONES[key];
   if (!z || z.type === "interior") return;
+
   const shipH = shipBBox.max.y - shipBBox.min.y;
   const yMin = shipBBox.min.y + shipH * (z.relYMin ?? 0);
   const yMax = shipBBox.min.y + shipH * (z.relYMax ?? 1);
   const normalType = z.normalType ?? 0;
+
   let extraOpts = null;
   if (key === "man_kho") {
     const sz = shipBBox.getSize(new THREE.Vector3());
@@ -1250,6 +1256,7 @@ function highlightZone(key) {
     const sternZ = shipBBox.max.z - sz.z * 0.12;
     extraOpts = { cx, xw, bowZ, sternZ };
   }
+
   meshes.forEach((mesh) => {
     if (mesh.name.toLowerCase().includes("crane")) return;
     const orig = origMaterialMap.get(mesh);
@@ -1264,7 +1271,7 @@ function highlightZone(key) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 6. INJECT STYLES (Desktop + Mobile responsive)
+// 6. INJECT PRODUCT-LINK STYLES
 // ═══════════════════════════════════════════════════════════
 const productLinkStyles = document.createElement("style");
 productLinkStyles.textContent = `
@@ -1380,7 +1387,7 @@ productLinkStyles.textContent = `
     color: #fff;
   }
 
-  /* ── Sub-zone styles ── */
+  /* ── MỚI: Sub-zone styles ── */
   .subzone-expand-btn {
     width: 20px;
     height: 20px;
@@ -1429,7 +1436,6 @@ productLinkStyles.textContent = `
     transition: background .12s;
     border-left: 3px solid transparent;
     position: relative;
-    min-height: 40px;
   }
   .subzone-row::before {
     content: '';
@@ -1464,6 +1470,8 @@ productLinkStyles.textContent = `
     white-space: nowrap;
     flex-shrink: 0;
   }
+
+  /* Sub-zone badge trong info panel */
   .subzone-badge {
     display: inline-flex;
     align-items: center;
@@ -1474,18 +1482,6 @@ productLinkStyles.textContent = `
     font-weight: 600;
     letter-spacing: 0.5px;
     color: #fff;
-  }
-
-  /* ── Mobile drag handle ── */
-  .mobile-sheet-handle {
-    display: none;
-    width: 36px;
-    height: 4px;
-    background: #d0d5dd;
-    border-radius: 2px;
-    margin: 10px auto 0;
-    cursor: grab;
-    flex-shrink: 0;
   }
 
   /* ── CTA BLOCK ── */
@@ -1527,6 +1523,7 @@ productLinkStyles.textContent = `
     color: #d4b07a;
     transform: translateX(2px);
   }
+
   .cta-block-wrap {
     margin: 6px 14px 18px;
     border-radius: 10px;
@@ -1557,7 +1554,12 @@ productLinkStyles.textContent = `
     background: rgba(184,151,90,0.05);
     pointer-events: none;
   }
-  .cta-block-icon { font-size: 20px; line-height: 1; margin-bottom: 6px; display: block; }
+  .cta-block-icon {
+    font-size: 20px;
+    line-height: 1;
+    margin-bottom: 6px;
+    display: block;
+  }
   .cta-block-label {
     font-family: 'Cormorant Garamond', serif;
     font-size: 16px;
@@ -1597,33 +1599,22 @@ productLinkStyles.textContent = `
     transform: translateY(-1px);
     box-shadow: 0 6px 20px rgba(184,151,90,0.5);
   }
-  .cta-block-btn:active { transform: translateY(0); filter: brightness(0.98); }
-  .cta-block-btn-arrow { font-size: 15px; transition: transform .18s; line-height: 1; }
-  .cta-block-btn:hover .cta-block-btn-arrow { transform: translateX(3px); }
+  .cta-block-btn:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
+  }
+  .cta-block-btn-arrow {
+    font-size: 15px;
+    transition: transform .18s;
+    line-height: 1;
+  }
+  .cta-block-btn:hover .cta-block-btn-arrow {
+    transform: translateX(3px);
+  }
   .cta-divider {
     height: 1px;
     background: linear-gradient(to right, transparent, #eef0f3 20%, #eef0f3 80%, transparent);
     margin: 4px 0 10px;
-  }
-
-  /* ── MOBILE RESPONSIVE ── */
-  @media (max-width: 768px) {
-    .mobile-sheet-handle { display: block; }
-    .paint-card { margin-bottom: 8px; }
-    .paint-card-body { padding: 10px 12px 7px; gap: 10px; }
-    .paint-name { font-size: 12.5px; }
-    .paint-desc { font-size: 11px; }
-    .paint-card-footer { padding: 0 12px 9px 44px; }
-    .product-link { padding: 5px 12px 5px 10px; font-size: 11px; min-height: 34px; }
-    .cta-inline-wrap { margin: 8px 14px 2px; padding: 9px 12px; }
-    .cta-inline-label { font-size: 11px; }
-    .cta-inline-btn { padding: 5px 12px; font-size: 11px; min-height: 32px; }
-    .cta-block-inner { padding: 14px 16px; }
-    .cta-block-label { font-size: 15px; }
-    .cta-block-btn { padding: 10px 18px; font-size: 12px; min-height: 40px; }
-    .paint-section-header { padding: 12px 16px 8px; }
-    .subzone-row { min-height: 44px; }
-    .subzone-name { font-size: 12.5px; }
   }
 `;
 document.head.appendChild(productLinkStyles);
@@ -1653,34 +1644,8 @@ Object.assign(infoPanel.style, {
   fontFamily: "'DM Sans', sans-serif",
   scrollbarWidth: "thin",
   scrollbarColor: "#dde3ea transparent",
-  WebkitOverflowScrolling: "touch",
 });
 document.body.appendChild(infoPanel);
-
-// Swipe-to-close for mobile bottom sheet
-let _touchStartY = 0,
-  _touchStartScrollTop = 0;
-infoPanel.addEventListener(
-  "touchstart",
-  (e) => {
-    _touchStartY = e.touches[0].clientY;
-    _touchStartScrollTop = infoPanel.scrollTop;
-  },
-  { passive: true },
-);
-infoPanel.addEventListener(
-  "touchend",
-  (e) => {
-    if (!isMobile()) return;
-    const dy = e.changedTouches[0].clientY - _touchStartY;
-    // Only close if swiped down AND panel is scrolled to top
-    if (dy > 72 && _touchStartScrollTop === 0) {
-      closeInfoPanel();
-    }
-  },
-  { passive: true },
-);
-
 let activeZoneKey = null;
 
 const glowStyle = document.createElement("style");
@@ -1693,7 +1658,6 @@ const DIAGRAM_IMAGES = {
   ham_hang: "./images/ham-hang-1.jpg",
   he_thong_khung: "./images/khung-xuong-tau.png",
 };
-
 function hexRgb(h) {
   return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(",");
 }
@@ -1724,32 +1688,7 @@ function buildPaintCard(p, i, zoneColor) {
     </div>`;
 }
 
-// ── Mobile overlay ────────────────────────────────────────
-const mobileOverlay = document.createElement("div");
-Object.assign(mobileOverlay.style, {
-  position: "fixed",
-  inset: "0",
-  background: "rgba(0,0,0,0.38)",
-  zIndex: "996",
-  display: "none",
-  backdropFilter: "blur(1px)",
-  WebkitBackdropFilter: "blur(1px)",
-  transition: "opacity .25s",
-});
-document.body.appendChild(mobileOverlay);
-
-mobileOverlay.addEventListener("click", () => {
-  if (activeZoneKey) closeInfoPanel();
-  if (legendVisible && isMobile()) {
-    legendVisible = false;
-    const lw = legend.offsetWidth;
-    legendWrap.style.transform = `translateX(-${lw + 16}px)`;
-    arrowSpan.style.transform = "rotate(180deg)";
-    mobileOverlay.style.display = "none";
-  }
-});
-
-// ── openInfoPanel ─────────────────────────────────────────
+// ── openInfoPanel hỗ trợ cả zone và sub-zone ──────────────
 function openInfoPanel(key) {
   const isSubZone = key in SUB_ZONES;
   const zBase = isSubZone ? SUB_ZONES[key] : ZONES[key];
@@ -1758,6 +1697,7 @@ function openInfoPanel(key) {
 
   activeZoneKey = key;
 
+  // ── Cập nhật highlight legend rows ──
   LEGEND_ORDER.forEach((k) => {
     const row = legendRows[k];
     const isParentOfActive = isSubZone && SUB_ZONES[key].parent === k;
@@ -1774,6 +1714,7 @@ function openInfoPanel(key) {
       isDirectActive || isParentOfActive ? "600" : "400";
   });
 
+  // ── Cập nhật highlight sub-zone rows ──
   Object.keys(subZoneRows).forEach((sk) => {
     const srow = subZoneRows[sk];
     const isActive = sk === key;
@@ -1796,11 +1737,16 @@ function openInfoPanel(key) {
   const typeDot = isInterior ? ui().dotInterior : ui().dotExterior;
   const rgb = hexRgb(zBase.color);
 
+  // Sub-zone badge (chỉ hiện khi là sub-zone)
   const subzoneBadgeHTML = isSubZone
     ? `<div style="margin-bottom:8px">
-        <span class="subzone-badge" style="background:${ZONES[SUB_ZONES[key].parent].color}">${getZoneText(SUB_ZONES[key].parent).name}</span>
+        <span class="subzone-badge" style="background:${ZONES[SUB_ZONES[key].parent].color}">
+          ${getZoneText(SUB_ZONES[key].parent).name}
+        </span>
         <span style="margin-left:5px;font-size:10px;color:#8599aa">›</span>
-        <span class="subzone-badge" style="background:${zBase.color};margin-left:4px">${zText.name}</span>
+        <span class="subzone-badge" style="background:${zBase.color};margin-left:4px">
+          ${zText.name}
+        </span>
        </div>`
     : "";
 
@@ -1818,12 +1764,16 @@ function openInfoPanel(key) {
     .map((p, i) => buildPaintCard(p, i, zBase.color))
     .join("");
 
+  // ── CTA inline (sau mô tả) ──────────────────────────────
   const ctaInlineHTML = `
     <div class="cta-inline-wrap">
       <span class="cta-inline-label">${ui().ctaInlineLabel}</span>
-      <a href="${CTA_URL}" target="_blank" rel="noopener noreferrer" class="cta-inline-btn">${ui().ctaInlineBtn}</a>
+      <a href="${CTA_URL}" target="_blank" rel="noopener noreferrer" class="cta-inline-btn">
+        ${ui().ctaInlineBtn}
+      </a>
     </div>`;
 
+  // ── CTA block lớn (cuối panel) ──────────────────────────
   const ctaBlockHTML = `
     <div class="cta-divider"></div>
     <div class="cta-block-wrap">
@@ -1838,13 +1788,9 @@ function openInfoPanel(key) {
       </div>
     </div>`;
 
-  // Mobile drag handle prepended
-  const dragHandleHTML = `<div class="mobile-sheet-handle" id="mobileSheetHandle"></div>`;
-
   infoPanel.innerHTML = `
-    ${dragHandleHTML}
     <div style="padding:16px 18px 14px;border-bottom:1px solid #eef0f3;position:relative">
-      <button id="closePanel" style="position:absolute;top:14px;right:14px;background:none;border:1px solid #d4d8df;color:#8599aa;width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:12px;line-height:26px;text-align:center;transition:all .15s;font-family:inherit;touch-action:manipulation" onmouseover="this.style.background='#f0f2f5';this.style.color='#0c1e35'" onmouseout="this.style.background='none';this.style.color='#8599aa'">✕</button>
+      <button id="closePanel" style="position:absolute;top:14px;right:14px;background:none;border:1px solid #d4d8df;color:#8599aa;width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:12px;line-height:22px;text-align:center;transition:all .15s;font-family:inherit" onmouseover="this.style.background='#f0f2f5';this.style.color='#0c1e35'" onmouseout="this.style.background='none';this.style.color='#8599aa'">✕</button>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <span style="width:12px;height:12px;background:${zBase.color};border-radius:2px;display:inline-block;flex-shrink:0"></span>
         <span style="font-size:10px;font-weight:600;letter-spacing:1px;color:#8599aa;text-transform:uppercase">${typeDot} ${typeLabel}</span>
@@ -1869,30 +1815,11 @@ function openInfoPanel(key) {
   document
     .getElementById("closePanel")
     .addEventListener("click", closeInfoPanel);
-
-  // Tap drag handle to close on mobile
-  const shHandle = document.getElementById("mobileSheetHandle");
-  if (shHandle) shHandle.addEventListener("click", closeInfoPanel);
-
-  // Show panel
-  if (isMobile()) {
-    infoPanel.style.transform = "translateY(0)";
-    // Show overlay but below legend if legend is open
-    mobileOverlay.style.display = "block";
-    mobileOverlay.style.zIndex = legendVisible ? "994" : "996";
-  } else {
-    infoPanel.style.transform = "translateX(0)";
-  }
-  infoPanel.scrollTop = 0;
+  infoPanel.style.transform = "translateX(0)";
 }
 
 function closeInfoPanel() {
-  if (isMobile()) {
-    infoPanel.style.transform = "translateY(110%)";
-    if (!legendVisible) mobileOverlay.style.display = "none";
-  } else {
-    infoPanel.style.transform = "translateX(360px)";
-  }
+  infoPanel.style.transform = "translateX(360px)";
   activeZoneKey = null;
   removePin();
   clearHighlight();
@@ -1913,24 +1840,21 @@ function closeInfoPanel() {
 // ── LEGEND ─────────────────────────────────────────────────
 const legend = document.createElement("div");
 Object.assign(legend.style, {
-  position: "relative",
-  top: "auto",
-  left: "auto",
-  zIndex: "auto",
-  marginLeft: "16px",
+  position: "fixed",
+  top: HEADER_H + 12 + "px",
+  left: "16px",
   background: "#ffffff",
   color: "#1a2b3c",
   borderRadius: "0 0 8px 8px",
   border: "1px solid rgba(12,30,53,0.10)",
   borderTop: "3px solid #0c1e35",
   boxShadow: "0 8px 32px rgba(12,30,53,0.12)",
+  zIndex: "999",
   userSelect: "none",
   minWidth: "220px",
-  maxWidth: "260px",
   overflow: "hidden",
   fontFamily: "'DM Sans', sans-serif",
-  transition: "none",
-  pointerEvents: "auto",
+  transition: "transform .32s cubic-bezier(.4,0,.2,1)",
 });
 
 const legendHeader = document.createElement("div");
@@ -1946,22 +1870,12 @@ legendHeader.innerHTML = `
 legend.appendChild(legendHeader);
 
 const legendBody = document.createElement("div");
-
-// Mobile: limit legend height so it scrolls if needed
-Object.assign(legendBody.style, {
-  padding: "8px 0",
-  overflowY: "auto",
-  maxHeight: "calc(100vh - 160px)",
-  WebkitOverflowScrolling: "touch",
-  scrollbarWidth: "thin",
-  scrollbarColor: "#dde3ea transparent",
-});
-
+Object.assign(legendBody.style, { padding: "8px 0" });
 const legendRows = {};
-const subZoneRows = {};
-let dayTauExpanded = false;
-let subZoneRowsContainer = null;
-let expandBtn = null;
+const subZoneRows = {}; // ── MỚI
+let dayTauExpanded = false; // ── MỚI: trạng thái expand
+let subZoneRowsContainer = null; // ── MỚI: ref đến container sub-rows
+let expandBtn = null; // ── MỚI: ref đến nút expand
 
 LEGEND_ORDER.forEach((key) => {
   const z = ZONES[key];
@@ -1971,13 +1885,14 @@ LEGEND_ORDER.forEach((key) => {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    padding: "9px 16px",
+    padding: "8px 16px",
     cursor: "pointer",
     transition: "background .12s",
     borderLeft: "3px solid transparent",
-    minHeight: "42px",
   });
   const isInt = z.type === "interior";
+
+  // ── MỚI: nút expand chỉ cho day_tau ──
   const expandBtnHTML =
     key === "day_tau"
       ? `<button class="subzone-expand-btn" id="dayTauExpandBtn" title="Mở rộng / Thu gọn">›</button>`
@@ -1989,7 +1904,9 @@ LEGEND_ORDER.forEach((key) => {
     <span class="legend-tag" style="font-size:9px;font-weight:600;letter-spacing:.6px;color:#8599aa;background:#f0f2f5;padding:1px 5px;border-radius:3px;white-space:nowrap;flex-shrink:0">${isInt ? ui().tagInterior : ui().tagExterior}</span>
     ${expandBtnHTML}`;
 
+  // ── Click trên hàng chính ──
   row.addEventListener("click", (e) => {
+    // Nếu click vào expand button thì không mở zone
     if (e.target.closest("#dayTauExpandBtn")) return;
     if (activeZoneKey === key) {
       closeInfoPanel();
@@ -2000,22 +1917,14 @@ LEGEND_ORDER.forEach((key) => {
     highlightZone(key);
     flyToZone(key);
     openInfoPanel(key);
-    // On mobile, close legend after selection
-    if (isMobile() && legendVisible) {
-      setTimeout(() => {
-        legendVisible = false;
-        const lw = legend.offsetWidth;
-        legendWrap.style.transform = `translateX(-${lw + 16}px)`;
-        arrowSpan.style.transform = "rotate(180deg)";
-        mobileOverlay.style.zIndex = "996";
-      }, 180);
-    }
   });
 
   legendBody.appendChild(row);
   legendRows[key] = row;
 
+  // ── MỚI: Sub-rows container cho day_tau ──
   if (key === "day_tau") {
+    // Lấy ref nút expand sau khi đã append
     setTimeout(() => {
       expandBtn = document.getElementById("dayTauExpandBtn");
       if (expandBtn) {
@@ -2028,24 +1937,30 @@ LEGEND_ORDER.forEach((key) => {
           } else {
             subZoneRowsContainer.classList.remove("open");
             expandBtn.classList.remove("open");
-            if (activeZoneKey && activeZoneKey in SUB_ZONES) closeInfoPanel();
+            // Đóng panel nếu đang xem sub-zone
+            if (activeZoneKey && activeZoneKey in SUB_ZONES) {
+              closeInfoPanel();
+            }
           }
         });
       }
     }, 0);
 
+    // Container cho sub-zone rows
     subZoneRowsContainer = document.createElement("div");
     subZoneRowsContainer.className = "subzone-rows-container";
 
     SUB_ZONE_ORDER.forEach((subKey) => {
       const sz = SUB_ZONES[subKey];
       const szt = getSubZoneText(subKey);
+
       const srow = document.createElement("div");
       srow.className = "subzone-row";
       srow.innerHTML = `
         <span class="subzone-dot" style="background:${sz.color}"></span>
         <span class="subzone-name">${szt.name}</span>
         <span class="subzone-tag">${ui().tagExterior}</span>`;
+
       srow.addEventListener("click", () => {
         if (activeZoneKey === subKey) {
           closeInfoPanel();
@@ -2055,16 +1970,8 @@ LEGEND_ORDER.forEach((key) => {
         highlightZone(subKey);
         flyToZone(subKey);
         openInfoPanel(subKey);
-        if (isMobile() && legendVisible) {
-          setTimeout(() => {
-            legendVisible = false;
-            const lw = legend.offsetWidth;
-            legendWrap.style.transform = `translateX(-${lw + 16}px)`;
-            arrowSpan.style.transform = "rotate(180deg)";
-            mobileOverlay.style.zIndex = "996";
-          }, 180);
-        }
       });
+
       subZoneRowsContainer.appendChild(srow);
       subZoneRows[subKey] = srow;
     });
@@ -2073,8 +1980,9 @@ LEGEND_ORDER.forEach((key) => {
   }
 });
 legend.appendChild(legendBody);
+document.body.appendChild(legend);
 
-// ── LEGEND WRAPPER ────────────────────────────────────────
+// ── WRAPPER bọc legend + nút toggle ──────────────────────
 const legendWrap = document.createElement("div");
 Object.assign(legendWrap.style, {
   position: "fixed",
@@ -2087,12 +1995,21 @@ Object.assign(legendWrap.style, {
   willChange: "transform",
   pointerEvents: "none",
 });
+
+Object.assign(legend.style, {
+  position: "relative",
+  top: "auto",
+  left: "auto",
+  zIndex: "auto",
+  marginLeft: "16px",
+  pointerEvents: "auto",
+});
 legendWrap.appendChild(legend);
 
 const legendToggle = document.createElement("button");
 Object.assign(legendToggle.style, {
-  width: "26px",
-  height: "48px",
+  width: "22px",
+  height: "44px",
   background: "#0c1e35",
   border: "1px solid rgba(184,151,90,0.5)",
   borderLeft: "none",
@@ -2106,14 +2023,12 @@ Object.assign(legendToggle.style, {
   marginTop: "2px",
   padding: "0",
   boxShadow: "4px 2px 12px rgba(12,30,53,0.25)",
-  transition: "background .18s, width .18s",
+  transition: "background .18s",
   fontFamily: "'DM Sans', sans-serif",
   pointerEvents: "auto",
   outline: "none",
-  touchAction: "manipulation",
 });
 legendToggle.title = "Ẩn/Hiện menu";
-
 const arrowSpan = document.createElement("span");
 Object.assign(arrowSpan.style, {
   display: "inline-block",
@@ -2126,32 +2041,26 @@ Object.assign(arrowSpan.style, {
 });
 arrowSpan.textContent = "‹";
 legendToggle.appendChild(arrowSpan);
-
 legendToggle.addEventListener("mouseenter", () => {
   legendToggle.style.background = "#163354";
+  legendToggle.style.color = "#f0c97a";
 });
 legendToggle.addEventListener("mouseleave", () => {
   legendToggle.style.background = "#0c1e35";
+  legendToggle.style.color = "#d4b07a";
 });
-
 let legendVisible = true;
 legendToggle.addEventListener("click", () => {
   legendVisible = !legendVisible;
   if (legendVisible) {
     legendWrap.style.transform = "translateX(0)";
     arrowSpan.style.transform = "rotate(0deg)";
-    if (isMobile()) {
-      mobileOverlay.style.display = "block";
-      mobileOverlay.style.zIndex = activeZoneKey ? "994" : "996";
-    }
   } else {
     const legendW = legend.offsetWidth;
     legendWrap.style.transform = `translateX(-${legendW + 16}px)`;
     arrowSpan.style.transform = "rotate(180deg)";
-    if (isMobile() && !activeZoneKey) mobileOverlay.style.display = "none";
   }
 });
-
 legendWrap.appendChild(legendToggle);
 document.body.appendChild(legendWrap);
 
@@ -2164,18 +2073,14 @@ Object.assign(hint.style, {
   transform: "translateX(-50%)",
   background: "rgba(12,30,53,0.82)",
   color: "rgba(255,255,255,0.65)",
-  padding: "7px 18px",
+  padding: "7px 20px",
   borderRadius: "20px",
   fontSize: "11.5px",
-  zIndex: "997",
+  zIndex: "999",
   whiteSpace: "nowrap",
   letterSpacing: "0.3px",
   fontFamily: "'DM Sans', sans-serif",
   backdropFilter: "blur(8px)",
-  WebkitBackdropFilter: "blur(8px)",
-  maxWidth: "calc(100vw - 32px)",
-  textAlign: "center",
-  boxSizing: "border-box",
 });
 hint.textContent = ui().hintLoading;
 document.body.appendChild(hint);
@@ -2191,7 +2096,7 @@ Object.assign(langToggle.style, {
   border: "1px solid rgba(12,30,53,0.18)",
   color: "#8599aa",
   borderRadius: "4px",
-  padding: "4px 9px",
+  padding: "3px 9px",
   fontSize: "10px",
   fontWeight: "700",
   letterSpacing: "1.2px",
@@ -2202,8 +2107,6 @@ Object.assign(langToggle.style, {
   display: "flex",
   alignItems: "center",
   gap: "4px",
-  minHeight: "28px",
-  touchAction: "manipulation",
 });
 langToggle.innerHTML = `<span style="font-size:13px;line-height:1">🌐</span><span id="langLabel">${ui().toggleBtn}</span>`;
 langToggle.addEventListener("mouseenter", () => {
@@ -2227,9 +2130,10 @@ function toggleLanguage() {
 
 function updateStaticUI() {
   const headerTitle = document.querySelector("#header-bar .header-title");
+  const headerSub = document.querySelector("#header-bar .header-sub");
   if (headerTitle) headerTitle.textContent = ui().headerTitle;
-  if (shipBBox)
-    hint.textContent = isMobile() ? ui().hintReadyMobile : ui().hintReady;
+  if (headerSub) headerSub.textContent = ui().headerSub;
+  if (shipBBox) hint.textContent = ui().hintReady;
 }
 
 function updateLegendText() {
@@ -2246,6 +2150,7 @@ function updateLegendText() {
       tagEl.textContent =
         ZONES[key].type === "interior" ? ui().tagInterior : ui().tagExterior;
   });
+  // ── MỚI: cập nhật sub-zone text ──
   SUB_ZONE_ORDER.forEach((subKey) => {
     const srow = subZoneRows[subKey];
     if (!srow) return;
@@ -2256,7 +2161,7 @@ function updateLegendText() {
   });
 }
 
-// ── FLY-TO ────────────────────────────────────────────────
+// ── FLY-TO (hỗ trợ cả ZONES và SUB_ZONES) ────────────────
 let flyTarget = null,
   flyT = 1;
 const FLY_SPEED = 0.032,
@@ -2292,115 +2197,12 @@ function flyToZone(key) {
   controls.maxPolarAngle =
     pol > Math.PI * 0.55 ? Math.PI * 0.97 : Math.PI * 0.54;
 }
-
 function ease(t) {
   return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 }
 
 // ═══════════════════════════════════════════════════════════
-// 8. RESPONSIVE LAYOUT
-// ═══════════════════════════════════════════════════════════
-function applyResponsiveLayout() {
-  const mobile = isMobile();
-  const headerH = mobile ? 46 : 50;
-  const brandH = mobile ? 40 : 44;
-
-  legendWrap.style.top = headerH + 12 + "px";
-  hint.style.bottom = brandH + 10 + "px";
-
-  if (mobile) {
-    // Info panel → bottom sheet
-    Object.assign(infoPanel.style, {
-      top: "auto",
-      right: "0",
-      left: "0",
-      bottom: brandH + "px",
-      width: "100%",
-      maxHeight: "65vh",
-      borderRadius: "16px 16px 0 0",
-      borderTop: "3px solid #0c1e35",
-      transform: activeZoneKey ? "translateY(0)" : "translateY(110%)",
-    });
-
-    // Legend: max-width on mobile
-    legend.style.minWidth = "200px";
-    legend.style.maxWidth = "260px";
-
-    // Toggle button wider on mobile for touch
-    legendToggle.style.width = "32px";
-    legendToggle.style.height = "52px";
-
-    // Hint text: shorter on mobile
-    if (shipBBox) hint.textContent = ui().hintReadyMobile;
-    hint.style.whiteSpace = "normal";
-    hint.style.fontSize = "11px";
-    hint.style.padding = "6px 14px";
-    hint.style.lineHeight = "1.45";
-  } else {
-    // Info panel → side panel (desktop)
-    Object.assign(infoPanel.style, {
-      top: HEADER_H + 12 + "px",
-      right: "16px",
-      left: "auto",
-      bottom: "auto",
-      width: "320px",
-      maxHeight: `calc(100vh - ${HEADER_H + BRAND_H + 24}px)`,
-      borderRadius: "0 0 8px 8px",
-      borderTop: "3px solid #0c1e35",
-      transform: activeZoneKey ? "translateX(0)" : "translateX(360px)",
-    });
-
-    legend.style.minWidth = "220px";
-    legend.style.maxWidth = "none";
-    legendToggle.style.width = "26px";
-    legendToggle.style.height = "48px";
-
-    if (shipBBox) hint.textContent = ui().hintReady;
-    hint.style.whiteSpace = "nowrap";
-    hint.style.fontSize = "11.5px";
-    hint.style.padding = "7px 20px";
-    hint.style.lineHeight = "1";
-
-    // Hide overlay on desktop resize
-    mobileOverlay.style.display = "none";
-
-    // Restore legend if it was hidden due to mobile
-    if (!legendVisible) {
-      legendVisible = true;
-      legendWrap.style.transform = "translateX(0)";
-      arrowSpan.style.transform = "rotate(0deg)";
-    }
-  }
-
-  // Legend body scroll height
-  legendBody.style.maxHeight = `calc(100vh - ${headerH + brandH + 90}px)`;
-}
-
-// ── Initial responsive setup ──────────────────────────────
-// (Called after all elements created)
-function initMobileLayout() {
-  if (isMobile()) {
-    // Start legend collapsed on mobile
-    legendVisible = false;
-    // Need to wait for legend to be in DOM to get its width
-    requestAnimationFrame(() => {
-      const lw = legend.offsetWidth || 220;
-      legendWrap.style.transform = `translateX(-${lw + 16}px)`;
-      arrowSpan.style.transform = "rotate(180deg)";
-    });
-    applyResponsiveLayout();
-  }
-}
-
-window.addEventListener("resize", () => {
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-  applyResponsiveLayout();
-});
-
-// ═══════════════════════════════════════════════════════════
-// 9. TẢI MODEL
+// 8. TẢI MODEL
 // ═══════════════════════════════════════════════════════════
 const raycaster = new THREE.Raycaster(),
   mouse = new THREE.Vector2();
@@ -2430,11 +2232,7 @@ new GLTFLoader().load(
     controls.target.set(0, mid, 0);
     camera.position.set(28, mid + 8, 36);
     controls.update();
-    hint.textContent = isMobile() ? ui().hintReadyMobile : ui().hintReady;
-    if (isMobile()) {
-      hint.style.whiteSpace = "normal";
-      hint.style.fontSize = "11px";
-    }
+    hint.textContent = ui().hintReady;
   },
   (xhr) => {
     const p = xhr.total ? Math.round((xhr.loaded / xhr.total) * 100) : "...";
@@ -2448,10 +2246,10 @@ new GLTFLoader().load(
 );
 
 // ═══════════════════════════════════════════════════════════
-// 10. EVENTS
+// 9. EVENTS
 // ═══════════════════════════════════════════════════════════
 window.addEventListener("mousemove", (e) => {
-  if (!meshes.length || !shipBBox || isMobile()) return;
+  if (!meshes.length || !shipBBox) return;
   mouse.x = (e.clientX / innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
@@ -2460,13 +2258,17 @@ window.addEventListener("mousemove", (e) => {
     ? "crosshair"
     : "grab";
 });
-
 renderer.domElement.addEventListener("click", (e) => {
   if (!meshes.length || !shipBBox) return;
   mouse.x = (e.clientX / innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   if (!raycaster.intersectObjects(meshes, false).length) closeInfoPanel();
+});
+window.addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
 });
 
 const clock = new THREE.Clock();
@@ -2513,6 +2315,3 @@ const clock = new THREE.Clock();
   controls.update();
   renderer.render(scene, camera);
 })();
-
-// ── Run initial mobile setup ──────────────────────────────
-initMobileLayout();

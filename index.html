@@ -2,10 +2,6 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
     <title>Barge 3D – Sơn Tàu Biển | Sơn Hải Vân</title>
     <link
       rel="icon"
@@ -53,9 +49,6 @@
         -moz-user-select: none;
         -ms-user-select: none;
         user-select: none;
-        /* Prevent iOS bounce */
-        overscroll-behavior: none;
-        -webkit-overflow-scrolling: touch;
       }
 
       /* ── TOOLTIP ────────────────────────── */
@@ -160,27 +153,6 @@
         margin-left: auto;
         opacity: 0.85;
       }
-
-      /* ── MOBILE RESPONSIVE ──────────────── */
-      @media (max-width: 768px) {
-        #header-bar {
-          height: 46px;
-          padding: 0 14px;
-          gap: 8px;
-        }
-        #header-bar img {
-          height: 22px;
-        }
-        #header-bar .header-title {
-          font-size: 13px;
-        }
-        #brand-bar {
-          height: 40px;
-        }
-        #brand-bar .brand-text {
-          font-size: 10.5px;
-        }
-      }
     </style>
   </head>
   <body>
@@ -191,14 +163,17 @@
       <img src="./images/logo-shv-bg-white.png" alt="Sơn Hải Vân" />
       <div class="header-sep"></div>
       <div class="header-title">Bản đồ Sơn Tàu Biển — 3D Interactive</div>
+      <!-- <div class="header-sub">Marine Coating System</div> -->
     </div>
 
     <!-- Brand Bar -->
     <div id="brand-bar">
+      <!-- <img src="./images/logo-shv-bg-white.png" alt="logo" /> -->
       <div class="brand-text">
         © 2026 &nbsp;<span class="brand-name">Hai Van Paint Co., Ltd.</span>
       </div>
       <div class="divider"></div>
+      <!-- <div class="brand-tag">Exclusive 3D Design · All Rights Reserved</div> -->
     </div>
 
     <script type="importmap">
@@ -216,6 +191,7 @@
       document.addEventListener("keydown", function (e) {
         if ((e.ctrlKey || e.metaKey) && e.keyCode === 83) {
           e.preventDefault();
+          // alert("Hành động lưu trang đã bị chặn!");
         }
       });
 
