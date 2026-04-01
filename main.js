@@ -45,17 +45,17 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Chống thấm và bảo vệ tối ưu vùng luôn ngập nước",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Coal tar Epoxy",
             desc: "Chống thấm, chịu hóa chất, bền trong môi trường biển",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
           {
             name: "Sơn Chống hà",
             desc: "Ngăn cản sinh vật biển bám vào vỏ tàu",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-chong-ha&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-chong-ha&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -67,12 +67,12 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Tạo lớp bảo vệ bền vững trong môi trường nước mặn",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Coal tar Epoxy",
             desc: "Kháng nước và hóa chất cực tốt, tuổi thọ cao",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
         ],
       },
@@ -84,12 +84,12 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Chống ăn mòn hiệu quả, nền tốt cho lớp phủ ngoài",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Polyurethane",
             desc: "Giữ màu lâu, bóng đẹp, chịu tia UV tốt",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -101,17 +101,17 @@ const T = {
           {
             name: "Sơn Epoxy",
             desc: "Độ cứng cao, chịu mài mòn và tải trọng cơ học",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Polyurethane",
             desc: "Đàn hồi, chịu va đập và thay đổi nhiệt độ",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn PU 1K",
             desc: "Dễ thi công, khô nhanh, thích hợp bảo trì định kỳ",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
         ],
       },
@@ -123,22 +123,22 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Chống ăn mòn tốt, an toàn với nhiều loại hàng hóa",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Alkyd",
             desc: "Phù hợp hầm hàng khô, chi phí hợp lý",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-alkyd&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-alkyd&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Polyurethane",
             desc: "Bền, chống hóa chất cho hàng hóa đặc biệt",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Cao su clo hóa",
             desc: "Kháng hóa chất mạnh, phù hợp hàng hóa ăn mòn",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-caosu-clo-hoa&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-caosu-clo-hoa&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -150,17 +150,17 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Bảo vệ kết cấu thép khỏi ăn mòn trong môi trường ẩm",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Coaltar Epoxy",
             desc: "Chống ẩm, chống thấm tuyệt vời cho kết cấu nội thất",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
           {
             name: "Sơn Alkyd",
             desc: "Lớp phủ hoàn thiện bảo vệ và thẩm mỹ",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-alkyd&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-alkyd&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -172,17 +172,17 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Lớp lót chống ăn mòn, nền bền vững cho lớp phủ ngoài",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Polyurethane",
             desc: "Màu sắc đẹp, giữ màu lâu, chịu thời tiết khắc nghiệt",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn PU 1K",
             desc: "Hoàn thiện nhanh, bóng đẹp cho khu vực cabin",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
         ],
       },
@@ -197,17 +197,17 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Lớp lót chống ăn mòn tối ưu cho đáy phẳng ngập nước",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Coal tar Epoxy",
             desc: "Chống thấm, bền bỉ vượt trội trong môi trường biển mặn",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
           {
             name: "Sơn Chống hà cường độ cao",
             desc: "Chuyên dụng cho đáy bằng — vùng bám sinh vật nhiều nhất",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-chong-ha&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-chong-ha&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -219,17 +219,17 @@ const T = {
           {
             name: "Sơn Epoxy chuyên dụng",
             desc: "Bám dính tốt trên bề mặt cong, chống ăn mòn hiệu quả",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Sơn Coal tar Epoxy",
             desc: "Chịu uốn, chịu ứng suất tốt cho vùng bilge phức tạp",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
           {
             name: "Sơn Chống hà",
             desc: "Bảo vệ vùng chuyển tiếp, ngăn sinh vật bám tích tụ",
-            link: "https://haivan.terax.dev/san-pham/?filter_dong-san-pham=son-chong-ha&query_type_dong-san-pham=or",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-chong-ha&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -273,17 +273,17 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Optimal waterproofing and protection for permanently submerged areas",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Coal Tar Epoxy Paint",
             desc: "Waterproof, chemical-resistant, durable in marine environments",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
           {
             name: "Anti-fouling Paint",
             desc: "Prevents marine organisms from attaching to the hull",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-chong-ha&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -295,12 +295,12 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Creates a durable protective layer in saltwater environments",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Coal Tar Epoxy Paint",
             desc: "Excellent water and chemical resistance with long service life",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
         ],
       },
@@ -312,12 +312,12 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Effective corrosion protection, excellent base for topcoats",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Polyurethane Paint",
             desc: "Long-lasting color, high gloss finish, good UV resistance",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -329,17 +329,17 @@ const T = {
           {
             name: "Epoxy Paint",
             desc: "High hardness, resistant to abrasion and mechanical loads",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Polyurethane Paint",
             desc: "Elastic, resistant to impact and temperature changes",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
           },
           {
             name: "1K PU Paint",
             desc: "Easy application, fast drying, suitable for periodic maintenance",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
         ],
       },
@@ -351,22 +351,22 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Good corrosion protection, safe with a wide range of cargo",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Alkyd Paint",
             desc: "Suitable for dry cargo holds, cost-effective solution",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-alkyd&query_type_dong-san-pham=or",
           },
           {
             name: "Polyurethane Paint",
             desc: "Durable, chemical-resistant for special cargo",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
           },
           {
             name: "Chlorinated Rubber Paint",
             desc: "Strong chemical resistance, suitable for corrosive cargo",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-caosu-clo-hoa&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -378,17 +378,17 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Protects steel structures from corrosion in humid environments",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Coaltar Epoxy Paint",
             desc: "Excellent moisture and waterproofing for interior structures",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
           {
             name: "Alkyd Paint",
             desc: "Finishing coat for protection and aesthetic appeal",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-alkyd&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -400,17 +400,17 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Anti-corrosion primer, durable base for exterior topcoats",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Polyurethane Paint",
             desc: "Beautiful colors, long-lasting finish, resistant to harsh weather",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-polyurethane&query_type_dong-san-pham=or",
           },
           {
             name: "1K PU Paint",
             desc: "Fast finishing, high gloss for cabin areas",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
         ],
       },
@@ -425,17 +425,17 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Optimal anti-corrosion primer for flat submerged bottom plating",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Coal Tar Epoxy Paint",
             desc: "Superior waterproofing and durability in marine saltwater",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
           {
             name: "High-Strength Anti-fouling Paint",
             desc: "Specialized for flat bottom — highest marine organism attachment area",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-chong-ha&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -447,17 +447,17 @@ const T = {
           {
             name: "Specialized Epoxy Paint",
             desc: "Strong adhesion on curved surfaces, effective corrosion protection",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-epoxy&query_type_dong-san-pham=or",
           },
           {
             name: "Coal Tar Epoxy Paint",
             desc: "Flexible, stress-resistant coating for the complex bilge region",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/",
           },
           {
             name: "Anti-fouling Paint",
             desc: "Protects the transition zone from marine organism accumulation",
-            link: "#",
+            link: "https://sonhaivan.com/san-pham/?filter_dong-san-pham=son-chong-ha&query_type_dong-san-pham=or",
           },
         ],
       },
@@ -471,7 +471,7 @@ const getZoneText = (key) => T[currentLang].zones[key];
 const getSubZoneText = (key) => T[currentLang].sub_zones[key]; // ── MỚI
 
 // ── URL tư vấn — chỉnh tại đây khi cần ──────────────────────
-const CTA_URL = "https://haivan.terax.dev/lien-he/";
+const CTA_URL = "https://sonhaivan.com/lien-he/";
 
 // ═══════════════════════════════════════════════════════════
 // 1. DỮ LIỆU VÙNG TÀU
