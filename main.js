@@ -474,6 +474,229 @@ const getSubZoneText = (key) => T[currentLang].sub_zones[key]; // ── MỚI
 const CTA_URL = "https://sonhaivan.com/lien-he/";
 
 // ═══════════════════════════════════════════════════════════
+// VESSEL CONFIGS — cấu hình từng loại tàu
+// ═══════════════════════════════════════════════════════════
+const VESSEL_CONFIGS = {
+  tau_bien: {
+    model: "./models/model-ship-3d-backup.glb", // ← đặt đúng tên file của bạn
+    labelVI: "Tàu Biển",
+    labelEN: "Ship",
+    titleVI: "Bản đồ Sơn Tàu Biển — 3D Interactive",
+    titleEN: "Ship Coating Map — 3D Interactive",
+    // Pin & view override cho từng zone (để null = dùng default trong ZONES)
+    zoneOverrides: {
+      day_tau: {
+        viewRelY: 0.02,
+        viewDist: 18,
+        viewAzimuth: Math.PI * 0.45,
+        viewPolar: 2.1,
+        pinCast: { from: "below", relY: 0.01, relXFrac: 0.5, relZFrac: 0.5 },
+      },
+      man_uot: {
+        viewRelY: 0.26,
+        viewDist: 24,
+        viewAzimuth: Math.PI * 0.78,
+        viewPolar: 1.42,
+        pinCast: {
+          from: "side_right",
+          relY: 0.26,
+          relXFrac: 1.0,
+          relZFrac: 0.42,
+        },
+      },
+      man_kho: {
+        viewRelY: 0.37,
+        viewDist: 24,
+        viewAzimuth: Math.PI * 0.75,
+        viewPolar: 1.38,
+        pinCast: {
+          from: "side_right",
+          relY: 0.37,
+          relXFrac: 1.0,
+          relZFrac: 0.38,
+        },
+      },
+      mat_boong: {
+        viewRelY: 0.51,
+        viewDist: 27,
+        viewAzimuth: Math.PI * 0.22,
+        viewPolar: 0.58,
+        pinCast: { from: "above", relY: 0.51, relXFrac: 0.5, relZFrac: 0.35 },
+      },
+      ham_hang: {
+        viewRelY: 0.55,
+        viewDist: 24,
+        viewAzimuth: Math.PI * 0.2,
+        viewPolar: 0.38,
+        pinCast: { from: "above", relY: 0.38, relXFrac: 0.5, relZFrac: 0.35 },
+      },
+      he_thong_khung: {
+        viewRelY: 0.4,
+        viewDist: 28,
+        viewAzimuth: Math.PI * 0.22,
+        viewPolar: 1.1,
+        pinCast: null,
+      },
+      thuong_tang: {
+        viewRelY: 0.82,
+        viewDist: 17,
+        viewAzimuth: Math.PI * 0.2,
+        viewPolar: 0.92,
+        pinCast: {
+          from: "scan_cabin",
+          relY: 0.81,
+          relXFrac: 1.0,
+          relZFrac: 0.5,
+        },
+      },
+    },
+    subZoneOverrides: {
+      day_tau_bang: {
+        viewRelY: 0.02,
+        viewDist: 18,
+        viewAzimuth: Math.PI * 0.45,
+        viewPolar: 2.15,
+        pinCast: { from: "below", relY: 0.01, relXFrac: 0.5, relZFrac: 0.5 },
+      },
+      day_tau_xien: {
+        viewRelY: 0.13,
+        viewDist: 22,
+        viewAzimuth: Math.PI * 0.55,
+        viewPolar: 1.95,
+        pinCast: {
+          from: "side_right",
+          relY: 0.13,
+          relXFrac: 1.0,
+          relZFrac: 0.42,
+        },
+      },
+    },
+  },
+
+  xa_lan: {
+    model: "./models/xa-lan.glb",
+    labelVI: "Xà Lan",
+    labelEN: "Barge",
+    titleVI: "Bản đồ Sơn Xà Lan — 3D Interactive",
+    titleEN: "Barge Coating Map — 3D Interactive",
+    zoneOverrides: {
+      // Đáy tàu — kéo thấp xuống so với tàu biển
+      day_tau: {
+        relYMin: 0.0,
+        relYMax: 0.1,
+        viewRelY: 0.01,
+        viewDist: 22,
+        viewAzimuth: Math.PI * 0.45,
+        viewPolar: 2.1,
+        pinCast: { from: "below", relY: 0.01, relXFrac: 0.5, relZFrac: 0.5 },
+      },
+      // Mớn nước — dịch xuống
+      man_uot: {
+        relYMin: 0.1,
+        relYMax: 0.27,
+        normalType: 2, // ← THÊM: chỉ highlight outer skin
+        viewRelY: 0.23,
+        viewDist: 26,
+        viewAzimuth: Math.PI * 0.72,
+        viewPolar: 1.45,
+        pinCast: {
+          from: "side_right",
+          relY: 0.23,
+          relXFrac: 1.0,
+          relZFrac: 0.45,
+        },
+      },
+      // Mạn khô — dịch xuống
+      man_kho: {
+        relYMin: 0.27,
+        relYMax: 0.35,
+        normalType: 2, // ← THÊM: chỉ highlight outer skin
+        viewRelY: 0.1,
+        viewDist: 26,
+        viewAzimuth: Math.PI * 0.7,
+        viewPolar: 1.35,
+        pinCast: {
+          from: "side_right",
+          relY: 0.3,
+          relXFrac: 1,
+          relZFrac: 0.4,
+        },
+      },
+      // Mặt boong — chỉ vào be chắn sóng / lối đi mép boong (không vào giữa hầm)
+      mat_boong: {
+        relYMin: 0.36,
+        relYMax: 0.4,
+        normalType: 1,
+        viewRelY: 0.48,
+        viewDist: 28,
+        viewAzimuth: Math.PI * 0.22,
+        viewPolar: 1,
+        pinCast: { from: "above", relY: 0.48, relXFrac: 0.6, relZFrac: 0.92 },
+      },
+      // Hầm hàng — override thành exterior để phát sáng vùng mở của hầm
+      ham_hang: {
+        type: "exterior",
+        relYMin: 0.0,
+        relYMax: 0.3,
+        normalType: 1, // chỉ highlight mặt hướng lên = đáy hầm nhìn từ trên
+        viewRelY: 0.52,
+        viewDist: 24,
+        viewAzimuth: Math.PI * 0.22,
+        viewPolar: 0.32,
+        pinCast: { from: "above", relY: 0.46, relXFrac: 0.5, relZFrac: 0.42 },
+      },
+      // Hệ thống khung xương
+      he_thong_khung: {
+        viewRelY: 0.35,
+        viewDist: 30,
+        viewAzimuth: Math.PI * 0.22,
+        viewPolar: 1.0,
+        pinCast: null,
+      },
+      // Thượng tầng Cabin — dùng cast từ trên thẳng xuống đầu cabin
+      // relZFrac: 0.10 = đầu tàu phía cabin; nếu cabin ở đầu kia thì đổi thành 0.90
+      thuong_tang: {
+        relYMin: 0.47,
+        relYMax: 1.0,
+        viewRelY: 0.78,
+        viewDist: 14,
+        viewAzimuth: Math.PI * 0.12,
+        viewPolar: 0.78,
+        pinCast: { from: "above", relY: 0.88, relXFrac: 0.5, relZFrac: 0.1 },
+      },
+    },
+    subZoneOverrides: {
+      // Đáy bằng — dải thấp nhất
+      day_tau_bang: {
+        relYMin: 0.0,
+        relYMax: 0.07,
+        viewRelY: 0.02,
+        viewDist: 20,
+        viewAzimuth: Math.PI * 0.45,
+        viewPolar: 2.15,
+        pinCast: { from: "below", relY: 0.01, relXFrac: 0.5, relZFrac: 0.5 },
+      },
+      // Đáy xiên — vùng bilge
+      day_tau_xien: {
+        relYMin: 0.07,
+        relYMax: 0.17,
+        viewRelY: 0.12,
+        viewDist: 24,
+        viewAzimuth: Math.PI * 0.55,
+        viewPolar: 1.9,
+        pinCast: {
+          from: "side_right",
+          relY: 0.12,
+          relXFrac: 1.0,
+          relZFrac: 0.42,
+        },
+      },
+    },
+  },
+};
+
+let currentVessel = "tau_bien";
+// ═══════════════════════════════════════════════════════════
 // 1. DỮ LIỆU VÙNG TÀU
 // ═══════════════════════════════════════════════════════════
 const ZONES = {
@@ -591,6 +814,17 @@ const SUB_ZONES = {
 
 // Helper: lấy zone data (ZONES hoặc SUB_ZONES)
 const getAnyZone = (key) => ZONES[key] || SUB_ZONES[key];
+// Helper: lấy view/pinCast theo vessel hiện tại
+function getZoneConfig(key) {
+  const cfg = VESSEL_CONFIGS[currentVessel];
+  const isSubZone = key in SUB_ZONES;
+  const overrides = isSubZone
+    ? (cfg.subZoneOverrides?.[key] ?? null)
+    : (cfg.zoneOverrides?.[key] ?? null);
+  if (!overrides) return ZONES[key] || SUB_ZONES[key];
+  const base = isSubZone ? SUB_ZONES[key] : ZONES[key];
+  return { ...base, ...overrides };
+}
 
 const LEGEND_ORDER = [
   "day_tau",
@@ -1084,9 +1318,8 @@ function placePin(key, meshList) {
     scene.remove(pinGroup);
     pinGroup = null;
   }
-  // Hỗ trợ cả ZONES và SUB_ZONES
-  const z = ZONES[key] || SUB_ZONES[key];
-  if (!z || z.type !== "exterior" || !shipBBox || !z.pinCast) return;
+  const z = getZoneConfig(key);
+  if (!z || !shipBBox || !z.pinCast) return;
   // Scale pin: day_tau parent lớn hơn, sub-zones nhỏ hơn
   const s = key === "day_tau" ? 3.5 : key in SUB_ZONES ? 2.2 : 1.0;
   const result = castToSurface(z.pinCast, shipBBox, meshList);
@@ -1239,7 +1472,7 @@ function highlightZone(key) {
   clearHighlight();
   activeHighlightKey = key;
 
-  const z = ZONES[key] || SUB_ZONES[key];
+  const z = getZoneConfig(key);
   if (!z || z.type === "interior") return;
 
   const shipH = shipBBox.max.y - shipBBox.min.y;
@@ -1248,7 +1481,7 @@ function highlightZone(key) {
   const normalType = z.normalType ?? 0;
 
   let extraOpts = null;
-  if (key === "man_kho") {
+  if (normalType === 2) {
     const sz = shipBBox.getSize(new THREE.Vector3());
     const cx = (shipBBox.min.x + shipBBox.max.x) * 0.5;
     const xw = sz.x * 0.5;
@@ -1624,9 +1857,9 @@ document.head.appendChild(productLinkStyles);
 // ═══════════════════════════════════════════════════════════
 const infoPanel = document.createElement("div");
 Object.assign(infoPanel.style, {
-  position: "fixed",
-  top: HEADER_H + 12 + "px",
-  right: "16px",
+  position: "relative",
+  top: "auto",
+  right: "auto",
   width: "320px",
   maxHeight: `calc(100vh - ${HEADER_H + BRAND_H + 24}px)`,
   overflowY: "auto",
@@ -1635,17 +1868,93 @@ Object.assign(infoPanel.style, {
   borderTop: "3px solid #0c1e35",
   borderRadius: "0 0 8px 8px",
   boxShadow: "0 8px 32px rgba(12,30,53,0.16)",
-  zIndex: "999",
-  transform: "translateX(360px)",
-  transition: "transform .32s cubic-bezier(.4,0,.2,1)",
   color: "#1a2b3c",
   fontSize: "13px",
   lineHeight: "1.65",
   fontFamily: "'DM Sans', sans-serif",
   scrollbarWidth: "thin",
   scrollbarColor: "#dde3ea transparent",
+  pointerEvents: "auto",
+  flexShrink: "0",
 });
-document.body.appendChild(infoPanel);
+
+// ── Info Panel Wrap (chứa toggle + panel) ─────────────────
+let infoPanelCollapsed = false;
+
+const infoPanelWrap = document.createElement("div");
+Object.assign(infoPanelWrap.style, {
+  position: "fixed",
+  top: HEADER_H + 12 + "px",
+  right: "0",
+  display: "flex",
+  alignItems: "flex-start",
+  zIndex: "999",
+  pointerEvents: "none",
+  // 320px panel + 22px toggle = 342px → ẩn hoàn toàn ban đầu
+  transform: "translateX(342px)",
+  transition: "transform .44s cubic-bezier(.25, 0.46, 0.45, 0.94)",
+  willChange: "transform",
+});
+
+// ── Toggle tab (nằm bên TRÁI panel) ───────────────────────
+const infoPanelToggle = document.createElement("button");
+Object.assign(infoPanelToggle.style, {
+  width: "22px",
+  height: "44px",
+  background: "#0c1e35",
+  border: "1px solid rgba(184,151,90,0.5)",
+  borderRight: "none",
+  borderRadius: "7px 0 0 7px",
+  color: "#d4b07a",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: "0",
+  marginTop: "2px",
+  padding: "0",
+  boxShadow: "-4px 2px 12px rgba(12,30,53,0.25)",
+  transition: "background .18s",
+  fontFamily: "'DM Sans', sans-serif",
+  pointerEvents: "auto",
+  outline: "none",
+});
+infoPanelToggle.title = "Ẩn/Hiện thông tin";
+
+const infoPanelArrow = document.createElement("span");
+Object.assign(infoPanelArrow.style, {
+  display: "inline-block",
+  fontSize: "17px",
+  lineHeight: "1",
+  color: "#d4b07a",
+  transition: "transform .44s cubic-bezier(.25, 0.46, 0.45, 0.94)",
+  marginTop: "1px",
+});
+infoPanelArrow.textContent = "›"; // › = panel đang mở → click để thu
+infoPanelToggle.appendChild(infoPanelArrow);
+
+infoPanelToggle.addEventListener("mouseenter", () => {
+  infoPanelToggle.style.background = "#163354";
+});
+infoPanelToggle.addEventListener("mouseleave", () => {
+  infoPanelToggle.style.background = "#0c1e35";
+});
+infoPanelToggle.addEventListener("click", () => {
+  infoPanelCollapsed = !infoPanelCollapsed;
+  if (infoPanelCollapsed) {
+    // Chỉ tab nhô ra ở mép phải, panel ẩn
+    infoPanelWrap.style.transform = "translateX(320px)";
+    infoPanelArrow.textContent = "‹"; // ‹ = panel đang thu → click để mở
+  } else {
+    infoPanelWrap.style.transform = "translateX(0)";
+    infoPanelArrow.textContent = "›";
+  }
+});
+
+infoPanelWrap.appendChild(infoPanelToggle);
+infoPanelWrap.appendChild(infoPanel);
+document.body.appendChild(infoPanelWrap);
+
 let activeZoneKey = null;
 
 const glowStyle = document.createElement("style");
@@ -1751,7 +2060,10 @@ function openInfoPanel(key) {
     : "";
 
   const diagramHTML =
-    !isSubZone && isInterior && DIAGRAM_IMAGES[key]
+    !isSubZone &&
+    isInterior &&
+    DIAGRAM_IMAGES[key] &&
+    !(currentVessel === "xa_lan" && key === "ham_hang")
       ? `<div style="padding:14px 18px 4px;border-bottom:1px solid #eef0f3">
         <div style="font-size:10px;font-weight:600;letter-spacing:1.2px;color:#8599aa;text-transform:uppercase;margin-bottom:8px">${ui().diagramLabel}</div>
         <div class="diagram-glow-wrap" style="--glow-rgb:${rgb}">
@@ -1815,11 +2127,16 @@ function openInfoPanel(key) {
   document
     .getElementById("closePanel")
     .addEventListener("click", closeInfoPanel);
-  infoPanel.style.transform = "translateX(0)";
+  // Luôn expand khi chọn zone mới
+  infoPanelCollapsed = false;
+  infoPanelArrow.textContent = "›";
+  infoPanelWrap.style.transform = "translateX(0)";
 }
 
 function closeInfoPanel() {
-  infoPanel.style.transform = "translateX(360px)";
+  infoPanelWrap.style.transform = "translateX(342px)";
+  infoPanelCollapsed = false;
+  infoPanelArrow.textContent = "›";
   activeZoneKey = null;
   removePin();
   clearHighlight();
@@ -1912,7 +2229,8 @@ LEGEND_ORDER.forEach((key) => {
       closeInfoPanel();
       return;
     }
-    if (z.type === "exterior") placePin(key, meshes);
+    const vcfg = getZoneConfig(key);
+    if (vcfg.pinCast) placePin(key, meshes);
     else removePin();
     highlightZone(key);
     flyToZone(key);
@@ -2130,9 +2448,10 @@ function toggleLanguage() {
 
 function updateStaticUI() {
   const headerTitle = document.querySelector("#header-bar .header-title");
-  const headerSub = document.querySelector("#header-bar .header-sub");
-  if (headerTitle) headerTitle.textContent = ui().headerTitle;
-  if (headerSub) headerSub.textContent = ui().headerSub;
+  if (headerTitle) {
+    const cfg = VESSEL_CONFIGS[currentVessel];
+    headerTitle.textContent = currentLang === "vi" ? cfg.titleVI : cfg.titleEN;
+  }
   if (shipBBox) hint.textContent = ui().hintReady;
 }
 
@@ -2171,7 +2490,7 @@ const FLY_SPEED = 0.032,
 
 function flyToZone(key) {
   if (!shipBBox) return;
-  const z = ZONES[key] || SUB_ZONES[key];
+  const z = getZoneConfig(key);
   const sz = shipBBox.getSize(new THREE.Vector3());
   const cen = shipBBox.getCenter(new THREE.Vector3());
   const ty = shipBBox.min.y + sz.y * z.viewRelY;
@@ -2208,42 +2527,94 @@ const raycaster = new THREE.Raycaster(),
   mouse = new THREE.Vector2();
 let meshes = [],
   shipBBox = null;
+let currentModel = null;
 
-new GLTFLoader().load(
-  "./models/model-ship-3d-backup.glb",
-  (gltf) => {
-    const model = gltf.scene;
-    const raw = new THREE.Box3().setFromObject(model);
-    const cen = raw.getCenter(new THREE.Vector3()),
-      sz = raw.getSize(new THREE.Vector3());
-    const s = 20 / Math.max(sz.x, sz.y, sz.z);
-    model.scale.setScalar(s);
-    model.position.set(-cen.x * s, -raw.min.y * s, -cen.z * s);
-    scene.add(model);
-    model.traverse((c) => {
-      if (c.isMesh) {
-        c.castShadow = c.receiveShadow = true;
-        meshes.push(c);
+function loadVesselModel(vesselKey) {
+  // 1. Reset UI
+  closeInfoPanel();
+  hint.textContent = ui().hintLoading;
+
+  // 2. Xoá model cũ khỏi scene
+  if (currentModel) {
+    scene.remove(currentModel);
+    currentModel.traverse((c) => {
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) {
+        const mats = Array.isArray(c.material) ? c.material : [c.material];
+        mats.forEach((m) => m.dispose());
       }
     });
-    shipBBox = new THREE.Box3().setFromObject(model);
-    initZoneMap();
-    const mid = shipBBox.min.y + (shipBBox.max.y - shipBBox.min.y) * 0.45;
-    controls.target.set(0, mid, 0);
-    camera.position.set(28, mid + 8, 36);
-    controls.update();
-    hint.textContent = ui().hintReady;
-  },
-  (xhr) => {
-    const p = xhr.total ? Math.round((xhr.loaded / xhr.total) * 100) : "...";
-    hint.textContent = ui().hintLoadingPct(p);
-  },
-  (err) => {
-    console.error("❌", err);
-    hint.textContent = ui().loadError;
-    hint.style.color = "#ff6b6b";
-  },
-);
+    currentModel = null;
+  }
+  meshes = [];
+  shipBBox = null;
+  origMaterialMap.clear();
+
+  // 3. Cập nhật header title
+  const headerTitle = document.querySelector("#header-bar .header-title");
+  if (headerTitle) {
+    const cfg = VESSEL_CONFIGS[vesselKey];
+    headerTitle.textContent = currentLang === "vi" ? cfg.titleVI : cfg.titleEN;
+  }
+
+  // 4. Load model mới
+  new GLTFLoader().load(
+    VESSEL_CONFIGS[vesselKey].model,
+    (gltf) => {
+      const model = gltf.scene;
+      const raw = new THREE.Box3().setFromObject(model);
+      const cen = raw.getCenter(new THREE.Vector3()),
+        sz = raw.getSize(new THREE.Vector3());
+      const s = 20 / Math.max(sz.x, sz.y, sz.z);
+      model.scale.setScalar(s);
+      model.position.set(-cen.x * s, -raw.min.y * s, -cen.z * s);
+      scene.add(model);
+      currentModel = model;
+      model.traverse((c) => {
+        if (c.isMesh) {
+          c.castShadow = c.receiveShadow = true;
+          meshes.push(c);
+        }
+      });
+      shipBBox = new THREE.Box3().setFromObject(model);
+      initZoneMap();
+      const mid = shipBBox.min.y + (shipBBox.max.y - shipBBox.min.y) * 0.45;
+      controls.target.set(0, mid, 0);
+      camera.position.set(28, mid + 8, 36);
+      controls.update();
+      hint.textContent = ui().hintReady;
+    },
+    (xhr) => {
+      const p = xhr.total ? Math.round((xhr.loaded / xhr.total) * 100) : "...";
+      hint.textContent = ui().hintLoadingPct(p);
+    },
+    (err) => {
+      console.error("❌", err);
+      hint.textContent = ui().loadError;
+      hint.style.color = "#ff6b6b";
+    },
+  );
+}
+
+function switchVessel(vesselKey) {
+  if (vesselKey === currentVessel) return;
+  currentVessel = vesselKey;
+
+  // Cập nhật tab active
+  document.querySelectorAll(".vessel-tab").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.vessel === vesselKey);
+  });
+
+  loadVesselModel(vesselKey);
+}
+
+// Gắn event cho các tab button
+document.querySelectorAll(".vessel-tab").forEach((btn) => {
+  btn.addEventListener("click", () => switchVessel(btn.dataset.vessel));
+});
+
+// Load lần đầu
+loadVesselModel(currentVessel);
 
 // ═══════════════════════════════════════════════════════════
 // 9. EVENTS

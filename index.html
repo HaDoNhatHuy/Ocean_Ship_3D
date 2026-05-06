@@ -153,6 +153,43 @@
         margin-left: auto;
         opacity: 0.85;
       }
+      /* ── VESSEL TABS ─────────────────────── */
+      #vessel-tabs {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        margin-left: 18px;
+      }
+
+      .vessel-tab {
+        padding: 5px 14px;
+        border: 1px solid rgba(184, 151, 90, 0.35);
+        border-radius: 5px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.5);
+        font-family: "DM Sans", sans-serif;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.4px;
+        cursor: pointer;
+        transition: all 0.18s;
+        pointer-events: auto;
+        white-space: nowrap;
+      }
+
+      .vessel-tab:hover {
+        background: rgba(184, 151, 90, 0.12);
+        color: rgba(255, 255, 255, 0.8);
+        border-color: rgba(184, 151, 90, 0.55);
+      }
+
+      .vessel-tab.active {
+        background: var(--gold);
+        color: var(--navy);
+        border-color: var(--gold);
+        font-weight: 700;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
@@ -164,6 +201,13 @@
       <div class="header-sep"></div>
       <div class="header-title">Bản đồ Sơn Tàu Biển — 3D Interactive</div>
       <!-- <div class="header-sub">Marine Coating System</div> -->
+      <!-- THÊM MỚI: Tab chuyển đổi vessel -->
+      <div id="vessel-tabs">
+        <button class="vessel-tab active" data-vessel="tau_bien">
+          🚢 Tàu Biển
+        </button>
+        <button class="vessel-tab" data-vessel="xa_lan">🛶 Xà Lan</button>
+      </div>
     </div>
 
     <!-- Brand Bar -->
