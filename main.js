@@ -528,7 +528,8 @@ const VESSEL_CONFIGS = {
         viewDist: 24,
         viewAzimuth: Math.PI * 0.2,
         viewPolar: 0.38,
-        pinCast: { from: "above", relY: 0.38, relXFrac: 0.5, relZFrac: 0.35 },
+        // pinCast: { from: "above", relY: 0.38, relXFrac: 0.5, relZFrac: 0.35 },
+        pinCast: null, // ← THAY ĐỔI: tạm ẩn pin để tránh nhầm với mặt boong, vì hầm hàng khá sâu bên trong
       },
       he_thong_khung: {
         viewRelY: 0.4,
@@ -1963,9 +1964,15 @@ glowStyle.textContent = `@keyframes diagramGlowPulse{0%,100%{box-shadow:0 0 0px 
 .diagram-glow-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(var(--glow-rgb),0.12) 0%,transparent 60%);pointer-events:none;}`;
 document.head.appendChild(glowStyle);
 
+// THAY BẰNG:
 const DIAGRAM_IMAGES = {
-  ham_hang: "./images/ham-hang-1.jpg",
-  he_thong_khung: "./images/khung-xuong-tau.png",
+  tau_bien: {
+    ham_hang: "./images/ham-hang-1.jpg",
+    he_thong_khung: "./images/khung-xuong-tau.png",
+  },
+  xa_lan: {
+    he_thong_khung: "./images/khung-xuong-salan.png", // ← ảnh riêng cho xà lan
+  },
 };
 function hexRgb(h) {
   return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(",");
@@ -2059,15 +2066,14 @@ function openInfoPanel(key) {
        </div>`
     : "";
 
+  // THAY BẰNG:
+  const _diagrams = DIAGRAM_IMAGES[currentVessel] ?? DIAGRAM_IMAGES.tau_bien;
   const diagramHTML =
-    !isSubZone &&
-    isInterior &&
-    DIAGRAM_IMAGES[key] &&
-    !(currentVessel === "xa_lan" && key === "ham_hang")
+    !isSubZone && isInterior && _diagrams[key]
       ? `<div style="padding:14px 18px 4px;border-bottom:1px solid #eef0f3">
         <div style="font-size:10px;font-weight:600;letter-spacing:1.2px;color:#8599aa;text-transform:uppercase;margin-bottom:8px">${ui().diagramLabel}</div>
         <div class="diagram-glow-wrap" style="--glow-rgb:${rgb}">
-          <img src="${DIAGRAM_IMAGES[key]}" alt="${z.name}" style="width:100%;display:block;object-fit:cover;max-height:180px;position:relative;z-index:1"/>
+          <img src="${_diagrams[key]}" alt="${z.name}" style="width:100%;display:block;object-fit:cover;max-height:180px;position:relative;z-index:1"/>
         </div>
        </div>`
       : "";
@@ -2600,10 +2606,22 @@ function switchVessel(vesselKey) {
   if (vesselKey === currentVessel) return;
   currentVessel = vesselKey;
 
-  // Cập nhật tab active
   document.querySelectorAll(".vessel-tab").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.vessel === vesselKey);
   });
+
+  // ── Ẩn/hiện sub-zones tùy loại tàu ──────────────────────
+  const showSubZones = vesselKey === "tau_bien";
+  if (expandBtn) expandBtn.style.display = showSubZones ? "" : "none";
+  if (subZoneRowsContainer) {
+    if (!showSubZones) {
+      subZoneRowsContainer.classList.remove("open");
+      if (expandBtn) expandBtn.classList.remove("open");
+      dayTauExpanded = false;
+    }
+    subZoneRowsContainer.style.display = showSubZones ? "" : "none";
+  }
+  // ────────────────────────────────────────────────────────
 
   loadVesselModel(vesselKey);
 }
