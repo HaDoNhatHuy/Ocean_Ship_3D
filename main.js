@@ -1060,7 +1060,8 @@ controls.minDistance = 3;
 controls.maxDistance = 110;
 controls.maxPolarAngle = Math.PI * 0.54;
 
-scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+scene.add(ambientLight);
 const sun = new THREE.DirectionalLight(0xfff8f0, 2.0);
 sun.position.set(35, 55, 25);
 sun.castShadow = true;
@@ -1076,7 +1077,24 @@ scene.add(sun);
 const fill = new THREE.DirectionalLight(0xc8d8e8, 0.6);
 fill.position.set(-20, 10, -15);
 scene.add(fill);
-scene.add(new THREE.HemisphereLight(0xe8f0ff, 0x8899aa, 0.5));
+const hemiLight = new THREE.HemisphereLight(0xe8f0ff, 0x8899aa, 0.5);
+scene.add(hemiLight);
+
+// ── MỚI: Cấu hình độ sáng riêng theo từng loại tàu ──────────
+const VESSEL_LIGHT_SETTINGS = {
+  tau_bien: { ambient: 1.2, sun: 2.0, fill: 0.6, hemi: 0.5, exposure: 1.05 },
+  xa_lan: { ambient: 1.7, sun: 2.3, fill: 1.0, hemi: 0.85, exposure: 1.35 },
+};
+
+function applyVesselLighting(vesselKey) {
+  const cfg =
+    VESSEL_LIGHT_SETTINGS[vesselKey] || VESSEL_LIGHT_SETTINGS.tau_bien;
+  ambientLight.intensity = cfg.ambient;
+  sun.intensity = cfg.sun;
+  fill.intensity = cfg.fill;
+  hemiLight.intensity = cfg.hemi;
+  renderer.toneMappingExposure = cfg.exposure;
+}
 
 // ═══════════════════════════════════════════════════════════
 // 4. PIN 3D
@@ -2605,6 +2623,7 @@ function loadVesselModel(vesselKey) {
 function switchVessel(vesselKey) {
   if (vesselKey === currentVessel) return;
   currentVessel = vesselKey;
+  applyVesselLighting(vesselKey); // ← MỚI: chỉ đổi sáng cho vessel đang chọn
 
   document.querySelectorAll(".vessel-tab").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.vessel === vesselKey);
@@ -2632,6 +2651,7 @@ document.querySelectorAll(".vessel-tab").forEach((btn) => {
 });
 
 // Load lần đầu
+applyVesselLighting(currentVessel);
 loadVesselModel(currentVessel);
 
 // ═══════════════════════════════════════════════════════════
