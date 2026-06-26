@@ -1112,23 +1112,15 @@ rotateOverlayStyle.textContent = `
     inset: 0;
     z-index: 100000;
     display: none;
-    pointer-events: auto;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
     padding: 28px;
-    min-height: 100vh;
-    min-height: 100dvh;
     background: linear-gradient(160deg, #0c1e35 0%, #163354 65%, #1a4068 100%);
     font-family: 'DM Sans', sans-serif;
   }
   #rotate-device-overlay.visible { display: flex; }
-  html.rotate-device-lock,
-  html.rotate-device-lock body {
-    overscroll-behavior: none;
-    touch-action: none;
-  }
   .rotate-hint-icon {
     position: relative;
     width: 96px;
@@ -1201,74 +1193,21 @@ function updateRotateOverlayText() {
 }
 updateRotateOverlayText();
 
-const PHONE_MAX_SHORT_SIDE = 600;
-const PHONE_MAX_LONG_SIDE = 980;
-
-function getScreenSides() {
-  const screenWidth = window.screen?.width || window.innerWidth;
-  const screenHeight = window.screen?.height || window.innerHeight;
-  return {
-    shortSide: Math.min(screenWidth, screenHeight),
-    longSide: Math.max(screenWidth, screenHeight),
-  };
-}
-
-function isPhoneDevice() {
-  if (
-    navigator.userAgentData &&
-    typeof navigator.userAgentData.mobile === "boolean"
-  ) {
-    return navigator.userAgentData.mobile;
-  }
-
-  const ua = navigator.userAgent || "";
-  const isAndroid = /\bAndroid\b/i.test(ua);
-  const isAndroidTablet = isAndroid && !/\bMobile\b/i.test(ua);
-  const isTabletUA = /\b(iPad|Tablet|PlayBook|Silk)\b/i.test(ua);
-
-  if (isAndroidTablet || isTabletUA) return false;
-  if (/\b(iPhone|iPod)\b/i.test(ua)) return true;
-  if (isAndroid && /\bMobile\b/i.test(ua)) return true;
-  if (/\b(Windows Phone|IEMobile)\b/i.test(ua)) return true;
-
-  const hasTouch =
-    navigator.maxTouchPoints > 0 ||
-    (window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
-  const { shortSide, longSide } = getScreenSides();
-  return (
-    hasTouch &&
-    shortSide <= PHONE_MAX_SHORT_SIDE &&
-    longSide <= PHONE_MAX_LONG_SIDE
-  );
-}
-
-function isPortraitViewport() {
-  if (window.matchMedia) {
-    return window.matchMedia("(orientation: portrait)").matches;
-  }
-  return window.innerHeight > window.innerWidth;
-}
-
 // Chỉ hiện trên điện thoại (màn hình nhỏ + cảm ứng) khi đang ở chế độ dọc
 function shouldShowRotateHint() {
-  return isPhoneDevice() && isPortraitViewport();
+  const isCoarsePointer =
+    window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  const shortSide = Math.min(window.innerWidth, window.innerHeight);
+  const isPhoneSized = shortSide <= 640; // loại trừ hầu hết máy tính bảng
+  const isPortraitNow = window.innerHeight > window.innerWidth;
+  return Boolean(isCoarsePointer) && isPhoneSized && isPortraitNow;
 }
 
 function updateRotateOverlay() {
-  const visible = shouldShowRotateHint();
-  rotateOverlay.classList.toggle("visible", visible);
-  rotateOverlay.setAttribute("aria-hidden", visible ? "false" : "true");
-  document.documentElement.classList.toggle("rotate-device-lock", visible);
+  rotateOverlay.classList.toggle("visible", shouldShowRotateHint());
 }
-function scheduleRotateOverlayUpdate() {
-  updateRotateOverlay();
-  window.setTimeout(updateRotateOverlay, 250);
-}
-
-window.addEventListener("resize", scheduleRotateOverlayUpdate);
-window.addEventListener("orientationchange", scheduleRotateOverlayUpdate);
-window.visualViewport?.addEventListener("resize", scheduleRotateOverlayUpdate);
-window.screen?.orientation?.addEventListener("change", scheduleRotateOverlayUpdate);
+window.addEventListener("resize", updateRotateOverlay);
+window.addEventListener("orientationchange", updateRotateOverlay);
 updateRotateOverlay(); // kiểm tra ngay khi tải trang
 
 // ═══════════════════════════════════════════════════════════
