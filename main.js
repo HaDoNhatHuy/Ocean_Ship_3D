@@ -35,6 +35,9 @@ const T = {
       ctaConsultBtn: "Liên hệ tư vấn ngay",
       ctaInlineLabel: "Cần tư vấn thêm?",
       ctaInlineBtn: "Gặp chuyên gia →",
+      rotateTitle: "Vui lòng xoay ngang màn hình",
+      rotateSub:
+        "Mô hình 3D hiển thị đẹp và đầy đủ nhất ở chế độ ngang. Hãy xoay điện thoại của bạn.",
     },
     zones: {
       day_tau: {
@@ -263,6 +266,9 @@ const T = {
       ctaConsultBtn: "Contact Our Experts Now",
       ctaInlineLabel: "Need more advice?",
       ctaInlineBtn: "Talk to an expert →",
+      rotateTitle: "Please rotate your device",
+      rotateSub:
+        "This 3D model looks best in landscape mode. Please rotate your phone.",
     },
     zones: {
       day_tau: {
@@ -1095,6 +1101,114 @@ function applyVesselLighting(vesselKey) {
   hemiLight.intensity = cfg.hemi;
   renderer.toneMappingExposure = cfg.exposure;
 }
+
+// ═══════════════════════════════════════════════════════════
+// 3.5 GỢI Ý XOAY NGANG MÀN HÌNH (chỉ áp dụng cho điện thoại)
+// ═══════════════════════════════════════════════════════════
+const rotateOverlayStyle = document.createElement("style");
+rotateOverlayStyle.textContent = `
+  #rotate-device-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 28px;
+    background: linear-gradient(160deg, #0c1e35 0%, #163354 65%, #1a4068 100%);
+    font-family: 'DM Sans', sans-serif;
+  }
+  #rotate-device-overlay.visible { display: flex; }
+  .rotate-hint-icon {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+  .rotate-hint-icon svg.phone-icon {
+    color: #d4b07a;
+    animation: rotateHintPhone 2.8s ease-in-out infinite;
+    transform-origin: 50% 50%;
+  }
+  .rotate-hint-icon .rotate-hint-ring {
+    position: absolute;
+    inset: -10px;
+    border: 1.5px dashed rgba(184,151,90,0.35);
+    border-radius: 50%;
+    animation: rotateHintRingSpin 5s linear infinite;
+  }
+  @keyframes rotateHintPhone {
+    0%   { transform: rotate(0deg); }
+    18%  { transform: rotate(0deg); }
+    50%  { transform: rotate(-90deg); }
+    68%  { transform: rotate(-90deg); }
+    100% { transform: rotate(0deg); }
+  }
+  @keyframes rotateHintRingSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  .rotate-hint-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+  }
+  .rotate-hint-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.7;
+    max-width: 270px;
+  }
+`;
+document.head.appendChild(rotateOverlayStyle);
+
+const rotateOverlay = document.createElement("div");
+rotateOverlay.id = "rotate-device-overlay";
+rotateOverlay.innerHTML = `
+  <div class="rotate-hint-icon">
+    <span class="rotate-hint-ring"></span>
+    <svg class="phone-icon" viewBox="0 0 64 64" width="60" height="60" fill="none">
+      <rect x="18" y="6" width="28" height="52" rx="6" stroke="currentColor" stroke-width="3.5"/>
+      <line x1="27" y1="51" x2="37" y2="51" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="rotate-hint-title" data-rotate-title></div>
+  <div class="rotate-hint-sub" data-rotate-sub></div>
+`;
+document.body.appendChild(rotateOverlay);
+
+function updateRotateOverlayText() {
+  const t = rotateOverlay.querySelector("[data-rotate-title]");
+  const s = rotateOverlay.querySelector("[data-rotate-sub]");
+  if (t) t.textContent = ui().rotateTitle;
+  if (s) s.textContent = ui().rotateSub;
+}
+updateRotateOverlayText();
+
+// Chỉ hiện trên điện thoại (màn hình nhỏ + cảm ứng) khi đang ở chế độ dọc
+function shouldShowRotateHint() {
+  const isCoarsePointer =
+    window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  const shortSide = Math.min(window.innerWidth, window.innerHeight);
+  const isPhoneSized = shortSide <= 640; // loại trừ hầu hết máy tính bảng
+  const isPortraitNow = window.innerHeight > window.innerWidth;
+  return Boolean(isCoarsePointer) && isPhoneSized && isPortraitNow;
+}
+
+function updateRotateOverlay() {
+  rotateOverlay.classList.toggle("visible", shouldShowRotateHint());
+}
+window.addEventListener("resize", updateRotateOverlay);
+window.addEventListener("orientationchange", updateRotateOverlay);
+updateRotateOverlay(); // kiểm tra ngay khi tải trang
 
 // ═══════════════════════════════════════════════════════════
 // 4. PIN 3D
@@ -2467,6 +2581,7 @@ function toggleLanguage() {
   document.getElementById("langLabel").textContent = ui().toggleBtn;
   updateStaticUI();
   updateLegendText();
+  updateRotateOverlayText();
   if (activeZoneKey) openInfoPanel(activeZoneKey);
 }
 
