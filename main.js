@@ -2742,8 +2742,20 @@ const raycaster = new THREE.Raycaster(),
 let meshes = [],
   shipBBox = null;
 let currentModel = null;
+let vesselLoadId = 0;
+
+function disposeModelObject(model) {
+  model.traverse((c) => {
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) {
+      const mats = Array.isArray(c.material) ? c.material : [c.material];
+      mats.forEach((m) => m.dispose());
+    }
+  });
+}
 
 function loadVesselModel(vesselKey) {
+  const loadId = ++vesselLoadId;
   // 1. Reset UI
   closeInfoPanel();
   hint.textContent = ui().hintLoading;
@@ -2751,13 +2763,7 @@ function loadVesselModel(vesselKey) {
   // 2. Xoá model cũ khỏi scene
   if (currentModel) {
     scene.remove(currentModel);
-    currentModel.traverse((c) => {
-      if (c.geometry) c.geometry.dispose();
-      if (c.material) {
-        const mats = Array.isArray(c.material) ? c.material : [c.material];
-        mats.forEach((m) => m.dispose());
-      }
-    });
+    disposeModelObject(currentModel);
     currentModel = null;
   }
   meshes = [];
@@ -2775,6 +2781,11 @@ function loadVesselModel(vesselKey) {
   new GLTFLoader().load(
     VESSEL_CONFIGS[vesselKey].model,
     (gltf) => {
+      if (loadId !== vesselLoadId || vesselKey !== currentVessel) {
+        disposeModelObject(gltf.scene);
+        return;
+      }
+
       const model = gltf.scene;
       const raw = new THREE.Box3().setFromObject(model);
       const cen = raw.getCenter(new THREE.Vector3()),
@@ -2799,10 +2810,14 @@ function loadVesselModel(vesselKey) {
       hint.textContent = ui().hintReady;
     },
     (xhr) => {
+      if (loadId !== vesselLoadId || vesselKey !== currentVessel) return;
+
       const p = xhr.total ? Math.round((xhr.loaded / xhr.total) * 100) : "...";
       hint.textContent = ui().hintLoadingPct(p);
     },
     (err) => {
+      if (loadId !== vesselLoadId || vesselKey !== currentVessel) return;
+
       console.error("❌", err);
       hint.textContent = ui().loadError;
       hint.style.color = "#ff6b6b";
