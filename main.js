@@ -1033,8 +1033,9 @@ function detectZone(mesh, point, face, bbox) {
 // ═══════════════════════════════════════════════════════════
 // 3. SCENE / CAMERA / RENDERER
 // ═══════════════════════════════════════════════════════════
-const HEADER_H = 50,
-  BRAND_H = 44;
+const IS_EMBED_MODE = document.documentElement.classList.contains("embed-mode");
+const HEADER_H = IS_EMBED_MODE ? 0 : 50,
+  BRAND_H = IS_EMBED_MODE ? 0 : 44;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xdde3ea);
 scene.fog = new THREE.Fog(0xdde3ea, 80, 200);
@@ -1278,7 +1279,10 @@ function scheduleRotateOverlayUpdate() {
 window.addEventListener("resize", scheduleRotateOverlayUpdate);
 window.addEventListener("orientationchange", scheduleRotateOverlayUpdate);
 window.visualViewport?.addEventListener("resize", scheduleRotateOverlayUpdate);
-window.screen?.orientation?.addEventListener?.("change", scheduleRotateOverlayUpdate);
+window.screen?.orientation?.addEventListener?.(
+  "change",
+  scheduleRotateOverlayUpdate,
+);
 updateRotateOverlay(); // kiểm tra ngay khi tải trang
 
 // ═══════════════════════════════════════════════════════════
