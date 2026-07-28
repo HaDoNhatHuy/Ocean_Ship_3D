@@ -582,9 +582,9 @@ const VESSEL_CONFIGS = {
 
   xa_lan: {
     model: "./models/xa-lan.glb",
-    labelVI: "Xà Lan",
+    labelVI: "Sà Lan",
     labelEN: "Barge",
-    titleVI: "Bản đồ Sơn Xà Lan — 3D Interactive",
+    titleVI: "Bản đồ Sơn Sà Lan — 3D Interactive",
     titleEN: "Barge Coating Map — 3D Interactive",
     zoneOverrides: {
       // Đáy tàu — kéo thấp xuống so với tàu biển
@@ -2178,7 +2178,7 @@ const DIAGRAM_IMAGES = {
     he_thong_khung: "./images/khung-xuong-tau.png",
   },
   xa_lan: {
-    he_thong_khung: "./images/khung-xuong-salan.png", // ← ảnh riêng cho xà lan
+    he_thong_khung: "./images/khung-xuong-salan.png", // ← ảnh riêng cho Sà lan
   },
 };
 function hexRgb(h) {
